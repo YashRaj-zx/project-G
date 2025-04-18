@@ -31,3 +31,6 @@ const NotFound = () => {
       <Footer />
     </div>
   );
+}; // Added the missing closing curly brace here
+
+export default NotFound; // And added the export default
