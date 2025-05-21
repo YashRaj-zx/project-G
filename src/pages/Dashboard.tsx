@@ -11,17 +11,21 @@ import Footer from "@/components/layout/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 
-// Sample mock data - in a real app, this would come from a backend
+// Types for our data
 interface Echo {
   id: string;
   name: string;
   description: string;
   imageUrl: string;
+  voiceType: string;
+  voiceId: string;
+  language: string;
   createdAt: string;
 }
 
 interface Call {
   id: string;
+  echoId: string;
   echoName: string;
   duration: string;
   date: string;
@@ -33,6 +37,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [echoes, setEchoes] = useState<Echo[]>([]);
   const [calls, setCalls] = useState<Call[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -42,45 +47,35 @@ const Dashboard = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  // Get user data
+  // Load real user data from localStorage
   useEffect(() => {
-    if (isAuthenticated) {
-      // Mock data - in a real app, fetch data from backend
-      setEchoes([
-        {
-          id: "1",
-          name: "Grandma Echo",
-          description: "A warm and caring echo of my grandmother",
-          imageUrl: "/placeholder.svg",
-          createdAt: "2023-05-10"
-        },
-        {
-          id: "2",
-          name: "Mentor Echo",
-          description: "Professional mentor with career advice",
-          imageUrl: "/placeholder.svg",
-          createdAt: "2023-05-15"
-        }
-      ]);
+    if (isAuthenticated && user) {
+      setLoading(true);
       
-      setCalls([
-        {
-          id: "1",
-          echoName: "Grandma Echo",
-          duration: "25 minutes",
-          date: "2023-05-20",
-          previewImageUrl: "/placeholder.svg"
-        },
-        {
-          id: "2",
-          echoName: "Mentor Echo",
-          duration: "45 minutes",
-          date: "2023-05-22",
-          previewImageUrl: "/placeholder.svg"
-        }
-      ]);
+      // Get user's echoes
+      const storedEchoes = localStorage.getItem(`echoes_${user.id}`);
+      if (storedEchoes) {
+        setEchoes(JSON.parse(storedEchoes));
+      }
+      
+      // Get user's call history
+      const storedCalls = localStorage.getItem(`calls_${user.id}`);
+      if (storedCalls) {
+        setCalls(JSON.parse(storedCalls));
+      }
+      
+      setLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]);
+
+  const handleStartCall = (echoId: string) => {
+    if (!isAuthenticated) {
+      toast.error("Please login to start a call");
+      navigate("/login");
+      return;
+    }
+    navigate(`/video-call?echo=${echoId}`);
+  };
 
   if (!isAuthenticated) {
     return null;
@@ -122,40 +117,61 @@ const Dashboard = () => {
                   </Card>
                 </Link>
                 
-                {echoes.map(echo => (
-                  <Card key={echo.id} className="h-full">
-                    <CardHeader className="pb-2">
-                      <div className="w-16 h-16 rounded-full overflow-hidden mb-2">
-                        <img src={echo.imageUrl} alt={echo.name} className="w-full h-full object-cover" />
-                      </div>
-                      <CardTitle>{echo.name}</CardTitle>
-                      <CardDescription className="text-foreground/60">
-                        Created on {new Date(echo.createdAt).toLocaleDateString()}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="line-clamp-3">{echo.description}</p>
-                    </CardContent>
-                    <CardFooter className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        className="text-echoes-purple border-echoes-purple flex-1"
-                        onClick={() => navigate(`/video-call?echo=${echo.id}`)}
-                      >
-                        <Video className="mr-2 h-4 w-4" />
-                        Call
-                      </Button>
-                      <Button variant="outline" className="flex-1">
-                        Edit
-                      </Button>
-                    </CardFooter>
+                {loading ? (
+                  <Card className="h-64 flex items-center justify-center">
+                    <p>Loading your echoes...</p>
                   </Card>
-                ))}
+                ) : echoes.length === 0 ? (
+                  <Card className="h-64 flex items-center justify-center col-span-2">
+                    <p className="text-center text-muted-foreground">You haven't created any echoes yet.</p>
+                  </Card>
+                ) : (
+                  echoes.map(echo => (
+                    <Card key={echo.id} className="h-full">
+                      <CardHeader className="pb-2">
+                        <div className="w-16 h-16 rounded-full overflow-hidden mb-2">
+                          <img src={echo.imageUrl} alt={echo.name} className="w-full h-full object-cover" />
+                        </div>
+                        <CardTitle>{echo.name}</CardTitle>
+                        <CardDescription className="text-foreground/60">
+                          Created on {new Date(echo.createdAt).toLocaleDateString()}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="line-clamp-3">{echo.description}</p>
+                        <div className="mt-2 text-sm">
+                          <span className="font-medium">Language:</span> {echo.language}
+                        </div>
+                      </CardContent>
+                      <CardFooter className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          className="text-echoes-purple border-echoes-purple flex-1"
+                          onClick={() => handleStartCall(echo.id)}
+                        >
+                          <Video className="mr-2 h-4 w-4" />
+                          Call
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="flex-1"
+                          onClick={() => navigate(`/edit-echo/${echo.id}`)}
+                        >
+                          Edit
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))
+                )}
               </div>
             </TabsContent>
             
             <TabsContent value="calls">
-              {calls.length === 0 ? (
+              {loading ? (
+                <Card className="h-64 flex items-center justify-center">
+                  <p>Loading your call history...</p>
+                </Card>
+              ) : calls.length === 0 ? (
                 <div className="text-center py-20 bg-echoes-light/5 rounded-lg">
                   <h3 className="text-xl font-medium mb-2">No calls yet</h3>
                   <p className="text-foreground/60 mb-6">Make your first call to an echo to see history</p>
@@ -177,7 +193,11 @@ const Dashboard = () => {
                         </CardDescription>
                       </CardHeader>
                       <CardFooter>
-                        <Button variant="outline" className="w-full">
+                        <Button 
+                          variant="outline" 
+                          className="w-full"
+                          onClick={() => navigate(`/call-recording/${call.id}`)}
+                        >
                           View Recording
                         </Button>
                       </CardFooter>

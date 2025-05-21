@@ -10,32 +10,58 @@ import { User, Mail, Key } from "lucide-react";
 import NavBar from "@/components/layout/NavBar";
 import Footer from "@/components/layout/Footer";
 import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard");
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // This is a placeholder for actual authentication logic
-    if (email && password) {
-      // Simulate successful login with mock user data
-      const userData = {
-        id: "user-123",
-        name: email.split('@')[0], // Use part of email as name for demo
-        email: email,
-        createdAt: new Date().toISOString(),
-      };
+    if (!email || !password) {
+      toast.error("Please enter both email and password");
+      return;
+    }
+    
+    try {
+      // Get users from localStorage
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const user = users.find((u: any) => u.email === email);
       
-      login(userData);
+      if (!user) {
+        toast.error("User not found. Please check your email or sign up.");
+        return;
+      }
+      
+      if (user.password !== password) {
+        toast.error("Incorrect password");
+        return;
+      }
+      
+      // Login successful
+      login({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt
+      });
+      
       toast.success("Login successful!");
       navigate("/dashboard");
-    } else {
-      toast.error("Please enter both email and password");
+    } catch (error) {
+      toast.error("Login failed. Please try again.");
+      console.error("Login error:", error);
     }
   };
 

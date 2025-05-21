@@ -14,6 +14,17 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,20 +32,56 @@ import { z } from "zod";
 import NavBar from "@/components/layout/NavBar";
 import Footer from "@/components/layout/Footer";
 import { User, Upload } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 
 // Form validation schema
 const echoFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   description: z.string().min(10, { message: "Description must be at least 10 characters." }).max(500, { message: "Description cannot exceed 500 characters." }),
   voiceType: z.string().min(1, { message: "Please select a voice type." }),
+  voiceId: z.string().min(1, { message: "Please select a voice." }),
   personalityTraits: z.string().min(5, { message: "Please describe some personality traits." }),
   memories: z.string().optional(),
 });
 
+// Voice options by language
+const voiceOptions = {
+  english: [
+    { id: "EXAVITQu4vr4xnSDxMaL", name: "Sarah" },
+    { id: "CwhRBWXzGAHq8TQ4Fs17", name: "Roger" },
+    { id: "IKne3meq5aSn9XLyUdCD", name: "Charlie" },
+    { id: "JBFqnCBsd6RMkjVDRZzb", name: "George" },
+  ],
+  hindi: [
+    { id: "hindi-voice-1", name: "Priya" },
+    { id: "hindi-voice-2", name: "Raj" },
+  ],
+  telugu: [
+    { id: "telugu-voice-1", name: "Anu" },
+    { id: "telugu-voice-2", name: "Ravi" },
+  ],
+  urdu: [
+    { id: "urdu-voice-1", name: "Ayesha" },
+    { id: "urdu-voice-2", name: "Farhan" },
+  ],
+};
+
 const CreateEcho = () => {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("english");
+  const [availableVoices, setAvailableVoices] = useState(voiceOptions.english);
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
+  // Check if user is authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      toast.error("Please sign in to create your Echo");
+      navigate("/login");
+    }
+  }, [isAuthenticated, navigate]);
 
   const form = useForm<z.infer<typeof echoFormSchema>>({
     resolver: zodResolver(echoFormSchema),
@@ -42,10 +89,18 @@ const CreateEcho = () => {
       name: "",
       description: "",
       voiceType: "",
+      voiceId: "",
       personalityTraits: "",
       memories: "",
     },
   });
+
+  // Update available voices when language changes
+  const handleLanguageChange = (language: string) => {
+    setSelectedLanguage(language);
+    setAvailableVoices(voiceOptions[language as keyof typeof voiceOptions]);
+    form.setValue("voiceId", ""); // Reset voice selection
+  };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
@@ -63,12 +118,37 @@ const CreateEcho = () => {
       return;
     }
 
+    if (!isAuthenticated) {
+      toast.error("Please sign in to create your Echo");
+      navigate("/login");
+      return;
+    }
+
     // In a real app, we would send this data to a backend
     console.log("Form data:", data);
     console.log("Photo file:", photoFile);
+    
+    // Save echo data to localStorage for the dashboard
+    const userId = JSON.parse(localStorage.getItem('user') || '{}').id;
+    const existingEchoes = JSON.parse(localStorage.getItem(`echoes_${userId}`) || '[]');
+    
+    const newEcho = {
+      id: Date.now().toString(),
+      name: data.name,
+      description: data.description,
+      imageUrl: photoPreview || '/placeholder.svg',
+      voiceType: data.voiceType,
+      voiceId: data.voiceId,
+      language: selectedLanguage,
+      personalityTraits: data.personalityTraits,
+      memories: data.memories || "",
+      createdAt: new Date().toISOString()
+    };
+    
+    localStorage.setItem(`echoes_${userId}`, JSON.stringify([...existingEchoes, newEcho]));
 
     toast.success("Echo created successfully!");
-    navigate("/video-call"); // Redirect to the video call page with the new echo
+    navigate("/dashboard"); // Redirect to the dashboard page with the new echo
   };
 
   return (
@@ -120,7 +200,7 @@ const CreateEcho = () => {
                       onChange={handlePhotoChange} 
                     />
                     <FormDescription className="text-center">
-                      Upload a clear photo for your Echo's appearance.
+                      Upload a clear photo for your Echo's appearance. We'll generate a human-like avatar that can communicate virtually.
                     </FormDescription>
                   </div>
                 </div>
@@ -144,31 +224,97 @@ const CreateEcho = () => {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="voiceType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Voice Type</FormLabel>
-                        <FormControl>
-                          <select 
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            {...field}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Voice Selection</h3>
+                    
+                    <div className="space-y-3">
+                      <Label>Select Language</Label>
+                      <RadioGroup 
+                        defaultValue="english"
+                        className="grid grid-cols-2 gap-2 sm:grid-cols-4"
+                        onValueChange={handleLanguageChange}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="english" id="english" />
+                          <Label htmlFor="english">English</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="hindi" id="hindi" />
+                          <Label htmlFor="hindi">Hindi</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="telugu" id="telugu" />
+                          <Label htmlFor="telugu">Telugu</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="urdu" id="urdu" />
+                          <Label htmlFor="urdu">Urdu</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="voiceType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Voice Type</FormLabel>
+                          <Select 
+                            onValueChange={field.onChange} 
+                            defaultValue={field.value}
                           >
-                            <option value="">Select a voice type</option>
-                            <option value="warm">Warm & Friendly</option>
-                            <option value="authoritative">Authoritative</option>
-                            <option value="soothing">Calm & Soothing</option>
-                            <option value="energetic">Energetic & Upbeat</option>
-                          </select>
-                        </FormControl>
-                        <FormDescription>
-                          How would you like your Echo to sound?
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a voice type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="warm">Warm & Friendly</SelectItem>
+                              <SelectItem value="authoritative">Authoritative</SelectItem>
+                              <SelectItem value="soothing">Calm & Soothing</SelectItem>
+                              <SelectItem value="energetic">Energetic & Upbeat</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormDescription>
+                            How would you like your Echo to sound?
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="voiceId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Voice Selection</FormLabel>
+                          <Select 
+                            onValueChange={field.onChange} 
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a voice" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {availableVoices.map((voice) => (
+                                <SelectItem key={voice.id} value={voice.id}>
+                                  {voice.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormDescription>
+                            Choose a specific voice for your Echo.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                  </div>
 
                   <FormField
                     control={form.control}
