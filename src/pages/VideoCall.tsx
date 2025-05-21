@@ -19,6 +19,7 @@ const VideoCall = () => {
   const [callDuration, setCallDuration] = useState(0);
   const [micEnabled, setMicEnabled] = useState(true);
   const [speakerEnabled, setSpeakerEnabled] = useState(true);
+  const [messages, setMessages] = useState<{text: string, sender: 'user' | 'echo'}[]>([]);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const callTimerRef = useRef<NodeJS.Timeout>();
@@ -74,6 +75,12 @@ const VideoCall = () => {
       setCallDuration(prev => prev + 1);
     }, 1000);
     
+    // Add greeting message using user's name
+    if (user) {
+      const greeting = `Hello ${user.name}! It's great to see you. How can I help you today?`;
+      setMessages([{text: greeting, sender: 'echo'}]);
+    }
+    
     // In a real app, we would load a video of the generated avatar here
     if (videoRef.current && echo?.imageUrl) {
       // For demo, we'll just show a static image
@@ -121,6 +128,26 @@ const VideoCall = () => {
   const toggleSpeaker = () => {
     setSpeakerEnabled(!speakerEnabled);
     toast.info(`Speaker ${speakerEnabled ? 'muted' : 'unmuted'}`);
+  };
+  
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    const messageInput = document.getElementById('message-input') as HTMLInputElement;
+    const message = messageInput.value.trim();
+    
+    if (!message) return;
+    
+    // Add user message
+    setMessages(prev => [...prev, {text: message, sender: 'user'}]);
+    messageInput.value = '';
+    
+    // Simulate echo response (in a real app, this would come from an AI service)
+    setTimeout(() => {
+      setMessages(prev => [...prev, {
+        text: `I understand. Tell me more about that.`,
+        sender: 'echo'
+      }]);
+    }, 1000);
   };
   
   if (loading) {
@@ -192,27 +219,45 @@ const VideoCall = () => {
           </div>
         </div>
         
-        {/* Chat interface would go here in a real implementation */}
+        {/* Chat interface */}
         <div className="w-full max-w-3xl mt-8 bg-background rounded-xl p-4">
           <h2 className="text-xl font-semibold mb-4">Chat with {echo?.name}</h2>
           
           <div className="h-64 overflow-y-auto mb-4 border rounded-md p-2">
-            <p className="text-center text-gray-400 my-12">
-              {callActive 
-                ? "Your conversation will appear here..." 
-                : "Call will begin shortly..."}
-            </p>
+            {messages.length === 0 ? (
+              <p className="text-center text-gray-400 my-12">
+                {callActive 
+                  ? "Your conversation will appear here..." 
+                  : "Call will begin shortly..."}
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {messages.map((msg, index) => (
+                  <div 
+                    key={index} 
+                    className={`p-2 rounded-lg max-w-[80%] ${
+                      msg.sender === 'user' 
+                        ? 'bg-echoes-purple/10 ml-auto' 
+                        : 'bg-gray-100 mr-auto'
+                    }`}
+                  >
+                    {msg.text}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           
-          <div className="flex gap-2">
+          <form onSubmit={handleSendMessage} className="flex gap-2">
             <input
+              id="message-input"
               type="text"
               className="flex-grow rounded-md border p-2"
               placeholder="Type your message..."
               disabled={!callActive}
             />
-            <Button disabled={!callActive}>Send</Button>
-          </div>
+            <Button type="submit" disabled={!callActive}>Send</Button>
+          </form>
         </div>
       </main>
     </div>

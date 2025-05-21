@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { User, Mail, Key } from "lucide-react";
+import { Mail, Key } from "lucide-react";
 import NavBar from "@/components/layout/NavBar";
 import Footer from "@/components/layout/Footer";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,32 +35,15 @@ const Login = () => {
     }
     
     try {
-      // Get users from localStorage
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const user = users.find((u: any) => u.email === email);
-      
-      if (!user) {
-        toast.error("User not found. Please check your email or sign up.");
-        return;
-      }
-      
-      if (user.password !== password) {
-        toast.error("Incorrect password");
-        return;
-      }
-      
-      // Login successful
-      login({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        createdAt: user.createdAt
-      });
-      
+      login({ email, password });
       toast.success("Login successful!");
       navigate("/dashboard");
     } catch (error) {
-      toast.error("Login failed. Please try again.");
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Login failed. Please try again.");
+      }
       console.error("Login error:", error);
     }
   };

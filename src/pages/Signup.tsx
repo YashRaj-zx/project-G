@@ -18,7 +18,7 @@ const Signup = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { signup } = useAuth();
 
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,20 +39,23 @@ const Signup = () => {
       return;
     }
     
-    // This is a placeholder for actual registration logic
-    // In a real app, we'd register with a backend here
-    
-    // Simulate successful registration with mock user data
-    const userData = {
-      id: `user-${Date.now()}`,
-      name: name,
-      email: email,
-      createdAt: new Date().toISOString(),
-    };
-    
-    login(userData); // Auto-login after signup
-    toast.success("Account created successfully!");
-    navigate("/dashboard"); // Direct to dashboard after signup
+    try {
+      // Create the user account
+      signup({
+        name,
+        email,
+        password
+      });
+      
+      toast.success("Account created successfully!");
+      navigate("/dashboard"); // Redirect to dashboard after signup
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Failed to create account. Please try again.");
+      }
+    }
   };
 
   return (

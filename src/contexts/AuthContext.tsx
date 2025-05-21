@@ -11,7 +11,7 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (userData: User) => void;
+  login: (userData: {email: string, password: string}) => void;
   logout: () => void;
   signup: (userData: Omit<User, "id" | "createdAt"> & { password: string }) => User;
 }
@@ -32,31 +32,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const login = (userData: User) => {
+  const login = (credentials: {email: string, password: string}) => {
     // Check if user exists in stored users
     const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const existingUser = users.find((u: User) => u.email === userData.email);
+    const existingUser = users.find((u: any) => u.email === credentials.email);
     
     if (!existingUser) {
       throw new Error("User does not exist");
     }
     
-    localStorage.setItem('user', JSON.stringify(existingUser));
-    setUser(existingUser);
+    // Verify password
+    if (existingUser.password !== credentials.password) {
+      throw new Error("Invalid password");
+    }
+    
+    // Extract user data without password
+    const { password, ...userData } = existingUser;
+    
+    // Store current user session
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
     setIsAuthenticated(true);
+    
+    return userData;
   };
 
   const signup = (userData: Omit<User, "id" | "createdAt"> & { password: string }) => {
     const users = JSON.parse(localStorage.getItem('users') || '[]');
     
     // Check if user already exists
-    const existingUser = users.find((u: User) => u.email === userData.email);
+    const existingUser = users.find((u: any) => u.email === userData.email);
     if (existingUser) {
       throw new Error("User with this email already exists");
     }
     
     // Create new user
-    const newUser: User & { password: string } = {
+    const newUser = {
       ...userData,
       id: `user-${Date.now()}`,
       createdAt: new Date().toISOString()
@@ -65,7 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Store user in users array
     localStorage.setItem('users', JSON.stringify([...users, newUser]));
     
-    // Store current user
+    // Store current user session (without password)
     const { password, ...userWithoutPassword } = newUser;
     localStorage.setItem('user', JSON.stringify(userWithoutPassword));
     
