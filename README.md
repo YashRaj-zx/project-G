@@ -1,73 +1,64 @@
-# Welcome to your Lovable project
+# Echoes Beyond 🌌🗣️
 
-## Project info
+**"Where memories meet technology."**
 
-**URL**: https://lovable.dev/projects/1198f8dc-cd5b-4b39-baf6-dd4b77810cb0
+Echoes Beyond is a pioneering platform that uses cutting-edge AI to recreate the voices, likeness, and conversational patterns of people who have passed away — enabling virtual video call interactions that feel deeply personal, emotional, and meaningful.
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## 🧠 What is Echoes Beyond?
 
-**Use Lovable**
+Echoes Beyond is an AI-driven platform designed to simulate realistic video call conversations with digital recreations of deceased individuals. Using a blend of machine learning, voice synthesis, facial animation, and memory modeling, we aim to offer comfort, closure, and companionship to those left behind.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/1198f8dc-cd5b-4b39-baf6-dd4b77810cb0) and start prompting.
+We do this by:
+- Reconstructing personality traits through personal data (videos, texts, social media, etc.)
+- Using generative models to create lifelike video avatars
+- Simulating voice patterns and emotional tones
+- Enabling private, secure video calls where users can converse with the AI version of a lost loved one
 
-Changes made via Lovable will be committed automatically to this repo.
+> **Note**: This project respects the ethical boundaries of digital remembrance and gives users full control over the data and usage.
 
-**Use your preferred IDE**
+---
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🔍 Features
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- 🗣️ **Conversational AI**: Natural and emotionally-aware conversations
+- 🎭 **Lifelike Avatars**: Realistic facial expressions and voice synthesis
+- 📸 **Memory Uploads**: Personalize the AI using photos, videos, and texts
+- 🔒 **Privacy First**: All data is encrypted and user-controlled
+- 🌐 **Cross-Platform**: Accessible via web and mobile
 
-Follow these steps:
+---
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 🚧 Project Status
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+> **Currently in active development.**
 
-# Step 3: Install the necessary dependencies.
-npm i
+We're building this with care and empathy, constantly refining the AI to be safe, respectful, and emotionally intelligent.
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+---
 
-**Edit a file directly in GitHub**
+## 🤝 Contributing
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+We welcome researchers, developers, designers, and ethicists to collaborate on this sensitive and meaningful project.
 
-**Use GitHub Codespaces**
+- Check out the open issues
+- Fork and clone the repo
+- Submit a pull request
+- Propose ideas or feedback via Discussions
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+**Let's build technology that heals, not just connects.**
 
-## What technologies are used for this project?
+---
 
-This project is built with:
+## 🛡️ Ethical Considerations
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+We recognize the profound emotional and ethical implications of simulating deceased individuals. **Echoes Beyond** follows strict consent-based protocols and is guided by principles of dignity, respect, and digital well-being.
 
-## How can I deploy this project?
+If you're an ethicist, grief counselor, or psychologist, we would love your insight.
 
-Simply open [Lovable](https://lovable.dev/projects/1198f8dc-cd5b-4b39-baf6-dd4b77810cb0) and click on Share -> Publish.
 
-## Can I connect a custom domain to my Lovable project?
 
-Yes, you can!
+---
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+**Echoes Beyond** is more than code — it's a bridge between presence and memory, technology and heart. 💙
