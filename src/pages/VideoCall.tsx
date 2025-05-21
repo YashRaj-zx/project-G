@@ -33,7 +33,7 @@ const VideoCall = () => {
 
   // Effect to update call duration
   useEffect(() => {
-    let interval: number | undefined;
+    let interval: NodeJS.Timeout | undefined;
     
     if (isInCall) {
       interval = setInterval(() => {
