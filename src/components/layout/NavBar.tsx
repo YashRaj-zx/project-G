@@ -1,11 +1,12 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 
 const NavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-echoes-light py-4">
@@ -16,14 +17,35 @@ const NavBar = () => {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-8">
-          <Link to="/how-it-works" className="text-foreground/80 hover:text-echoes-purple transition-colors">
+          <Link 
+            to="/how-it-works" 
+            className={`${
+              location.pathname === '/how-it-works' 
+                ? 'text-echoes-purple' 
+                : 'text-foreground/80'
+            } hover:text-echoes-purple transition-colors`}
+          >
             How It Works
           </Link>
-          <Link to="/pricing" className="text-foreground/80 hover:text-echoes-purple transition-colors">
+          <Link 
+            to="/pricing" 
+            className={`${
+              location.pathname === '/pricing' 
+                ? 'text-echoes-purple' 
+                : 'text-foreground/80'
+            } hover:text-echoes-purple transition-colors`}
+          >
             Pricing
           </Link>
-          <Link to="/about" className="text-foreground/80 hover:text-echoes-purple transition-colors">
-            About Us
+          <Link 
+            to="/create-echo" 
+            className={`${
+              location.pathname === '/create-echo' 
+                ? 'text-echoes-purple' 
+                : 'text-foreground/80'
+            } hover:text-echoes-purple transition-colors`}
+          >
+            Create Echo
           </Link>
           <div className="flex items-center gap-4">
             <Link to="/login">
@@ -58,24 +80,36 @@ const NavBar = () => {
           <div className="flex flex-col p-6 space-y-6">
             <Link 
               to="/how-it-works" 
-              className="text-lg text-foreground/80 hover:text-echoes-purple transition-colors"
+              className={`text-lg ${
+                location.pathname === '/how-it-works' 
+                  ? 'text-echoes-purple' 
+                  : 'text-foreground/80'
+              } hover:text-echoes-purple transition-colors`}
               onClick={() => setIsMenuOpen(false)}
             >
               How It Works
             </Link>
             <Link 
               to="/pricing" 
-              className="text-lg text-foreground/80 hover:text-echoes-purple transition-colors"
+              className={`text-lg ${
+                location.pathname === '/pricing' 
+                  ? 'text-echoes-purple' 
+                  : 'text-foreground/80'
+              } hover:text-echoes-purple transition-colors`}
               onClick={() => setIsMenuOpen(false)}
             >
               Pricing
             </Link>
             <Link 
-              to="/about" 
-              className="text-lg text-foreground/80 hover:text-echoes-purple transition-colors"
+              to="/create-echo" 
+              className={`text-lg ${
+                location.pathname === '/create-echo' 
+                  ? 'text-echoes-purple' 
+                  : 'text-foreground/80'
+              } hover:text-echoes-purple transition-colors`}
               onClick={() => setIsMenuOpen(false)}
             >
-              About Us
+              Create Echo
             </Link>
             <div className="flex flex-col gap-4 pt-4 border-t border-echoes-light/30">
               <Link to="/login" onClick={() => setIsMenuOpen(false)}>
