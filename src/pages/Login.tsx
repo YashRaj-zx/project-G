@@ -9,21 +9,31 @@ import { toast } from "sonner";
 import { User, Mail, Key } from "lucide-react";
 import NavBar from "@/components/layout/NavBar";
 import Footer from "@/components/layout/Footer";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     
     // This is a placeholder for actual authentication logic
     if (email && password) {
+      // Simulate successful login with mock user data
+      const userData = {
+        id: "user-123",
+        name: email.split('@')[0], // Use part of email as name for demo
+        email: email,
+        createdAt: new Date().toISOString(),
+      };
+      
+      login(userData);
       toast.success("Login successful!");
-      // In a real app, we'd authenticate with a backend here
-      navigate("/");
+      navigate("/dashboard");
     } else {
       toast.error("Please enter both email and password");
     }

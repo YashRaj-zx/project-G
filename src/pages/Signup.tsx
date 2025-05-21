@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Mail, Key, User, UserPlus } from "lucide-react";
 import NavBar from "@/components/layout/NavBar";
 import Footer from "@/components/layout/Footer";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -17,6 +18,7 @@ const Signup = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,9 +40,19 @@ const Signup = () => {
     }
     
     // This is a placeholder for actual registration logic
-    toast.success("Account created successfully!");
     // In a real app, we'd register with a backend here
-    navigate("/create-echo");
+    
+    // Simulate successful registration with mock user data
+    const userData = {
+      id: `user-${Date.now()}`,
+      name: name,
+      email: email,
+      createdAt: new Date().toISOString(),
+    };
+    
+    login(userData); // Auto-login after signup
+    toast.success("Account created successfully!");
+    navigate("/dashboard"); // Direct to dashboard after signup
   };
 
   return (
