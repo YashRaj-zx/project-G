@@ -22,9 +22,10 @@ export const cloneVoice = async (
     // Create a form data object
     const formData = new FormData();
     formData.append('name', name);
-    formData.append('audio', audioFile);
+    formData.append('files', audioFile);
+    formData.append('description', `Cloned voice for ${name}`);
     
-    // This would be the actual API call in production
+    // Make the actual API call to ElevenLabs
     const response = await fetch('https://api.elevenlabs.io/v1/voices/add', {
       method: 'POST',
       headers: {
@@ -34,10 +35,13 @@ export const cloneVoice = async (
     });
     
     if (!response.ok) {
-      throw new Error('Failed to clone voice');
+      const errorData = await response.json().catch(() => ({}));
+      console.error("ElevenLabs API error:", errorData);
+      throw new Error(`Failed to clone voice: ${response.status} ${response.statusText}`);
     }
     
     const data = await response.json();
+    console.log("Voice cloning response:", data);
     
     // Return the voice ID and name from the API response
     return {
@@ -46,7 +50,7 @@ export const cloneVoice = async (
     };
   } catch (error) {
     console.error("Error cloning voice:", error);
-    throw new Error("Failed to clone voice");
+    throw new Error(`Failed to clone voice: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
 
@@ -58,8 +62,9 @@ export const textToSpeech = async (
 ): Promise<TextToSpeechResponse> => {
   try {
     console.log(`Converting text to speech using voice ID: ${voiceId}`);
+    console.log(`Text to synthesize: "${text}"`);
     
-    // Make the actual API call to ElevenLabs
+    // Make the API call to ElevenLabs
     const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: 'POST',
       headers: {
@@ -69,28 +74,37 @@ export const textToSpeech = async (
       body: JSON.stringify({
         text,
         model_id: 'eleven_multilingual_v2',
+        voice_settings: {
+          stability: 0.5,
+          similarity_boost: 0.75,
+        }
       }),
     });
     
     if (!response.ok) {
-      throw new Error('Failed to convert text to speech');
+      const errorData = await response.json().catch(() => ({}));
+      console.error("Text to speech API error:", errorData);
+      throw new Error(`Failed to convert text to speech: ${response.status} ${response.statusText}`);
     }
     
     const audioBlob = await response.blob();
     const audioUrl = URL.createObjectURL(audioBlob);
     
+    console.log("Text to speech successful, created audio URL:", audioUrl);
     return {
       audioUrl: audioUrl,
     };
   } catch (error) {
     console.error("Error converting text to speech:", error);
-    throw new Error("Failed to convert text to speech");
+    throw new Error(`Failed to convert text to speech: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
 
 // Get available voices from ElevenLabs
 export const getAvailableVoices = async (apiKey: string = "sk_a358fd141a5dfcbbabf5b62557a4b7b503b132c84a710347"): Promise<any[]> => {
   try {
+    console.log("Fetching available voices from ElevenLabs API");
+    
     // Fetch available voices from ElevenLabs
     const response = await fetch("https://api.elevenlabs.io/v1/voices", {
       headers: {
@@ -99,13 +113,17 @@ export const getAvailableVoices = async (apiKey: string = "sk_a358fd141a5dfcbbab
     });
     
     if (!response.ok) {
-      throw new Error('Failed to fetch voices');
+      const errorData = await response.json().catch(() => ({}));
+      console.error("Error fetching voices:", errorData);
+      throw new Error(`Failed to fetch voices: ${response.status} ${response.statusText}`);
     }
     
     const data = await response.json();
+    console.log(`Retrieved ${data.voices?.length || 0} voices`);
     return data.voices || [];
   } catch (error) {
     console.error("Error fetching voices:", error);
+    // Fallback to default voices
     return [
       { voice_id: "EXAVITQu4vr4xnSDxMaL", name: "Sarah" },
       { voice_id: "CwhRBWXzGAHq8TQ4Fs17", name: "Roger" },
@@ -115,7 +133,7 @@ export const getAvailableVoices = async (apiKey: string = "sk_a358fd141a5dfcbbab
   }
 };
 
-// Now let's update the existing Gemini API integration to use voice synthesis
+// Enhanced function to generate avatar response with voice
 export const enhancedGenerateAvatarResponse = async (
   message: string,
   imageUrl: string,
@@ -125,26 +143,28 @@ export const enhancedGenerateAvatarResponse = async (
   elevenLabsApiKey: string = "sk_a358fd141a5dfcbbabf5b62557a4b7b503b132c84a710347"
 ): Promise<any> => {
   try {
-    // First generate the text response using Gemini (simulated)
-    console.log(`Generating response with Gemini API:
+    console.log(`Generating enhanced avatar response:
       - Message: ${message}
       - Image URL: ${imageUrl}
       - Voice ID: ${voiceId}
       - Language: ${language}
       - API Key: [REDACTED]`);
     
-    // Simulate API processing time for the text generation
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // For demo, we'll use the input message as the response text instead of Gemini API
+    // In a production app, you would integrate with Gemini API here
+    const textResponse = message;
     
-    // Generate a simulated text response
-    const textResponse = "Hello! It's great to see you. How can I help you today?";
+    console.log(`Generated text response: "${textResponse}"`);
     
-    // Then generate audio using ElevenLabs
+    // Generate audio using ElevenLabs
+    console.log("Calling text-to-speech API...");
     const speechResponse = await textToSpeech(
       textResponse,
       voiceId,
       elevenLabsApiKey
     );
+    
+    console.log("Successfully generated speech response with audio URL:", speechResponse.audioUrl);
     
     // Return combined response
     return {
@@ -154,6 +174,6 @@ export const enhancedGenerateAvatarResponse = async (
     };
   } catch (error) {
     console.error("Error generating enhanced avatar response:", error);
-    throw new Error("Failed to generate avatar response");
+    throw new Error(`Failed to generate avatar response: ${error instanceof Error ? error.message : String(error)}`);
   }
 };

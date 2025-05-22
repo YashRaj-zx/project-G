@@ -89,14 +89,17 @@ const VideoCall = () => {
     
     // Generate initial greeting using user's name
     if (user && echo) {
-      const greeting = `Hello ${user.name}! It's great to see you. How can I help you today?`;
+      const greeting = `Hello ${user.name || 'there'}! It's great to see you. How can I help you today?`;
       
       // Add greeting to internal message record
       setMessages([{text: greeting, sender: 'echo'}]);
       
-      // Simulate the avatar speaking the greeting using enhanced API
+      // Generate speech for the greeting
       setIsSpeaking(true);
       try {
+        console.log("Generating initial greeting speech...");
+        console.log("Echo data:", echo);
+        
         const response = await enhancedGenerateAvatarResponse(
           greeting, 
           echo.imageUrl || '/placeholder.svg',
@@ -106,19 +109,37 @@ const VideoCall = () => {
           elevenLabsApiKey
         );
         
-        // In a real implementation, we would play the audio and show the video
-        // For now, we'll just simulate the speaking duration
-        if (audioRef.current && response.audioUrl) {
-          audioRef.current.src = response.audioUrl;
-          audioRef.current.play();
-        }
+        console.log("Speech response:", response);
         
-        setTimeout(() => {
+        if (audioRef.current && response.audioUrl) {
+          console.log("Playing audio:", response.audioUrl);
+          audioRef.current.src = response.audioUrl;
+          audioRef.current.oncanplaythrough = () => {
+            console.log("Audio can play through, starting playback");
+            audioRef.current?.play().catch(error => {
+              console.error("Error playing audio:", error);
+              toast.error("Couldn't play audio. Please check your audio settings.");
+            });
+          };
+          
+          audioRef.current.onended = () => {
+            console.log("Audio playback ended");
+            setIsSpeaking(false);
+          };
+          
+          audioRef.current.onerror = (e) => {
+            console.error("Audio error:", e);
+            setIsSpeaking(false);
+            toast.error("Error playing audio");
+          };
+        } else {
+          console.error("Audio element or URL not available");
           setIsSpeaking(false);
-        }, 3000);
+        }
       } catch (error) {
         console.error("Error generating greeting:", error);
         setIsSpeaking(false);
+        toast.error("Error generating voice. Please try again.");
       }
     }
     
@@ -168,6 +189,9 @@ const VideoCall = () => {
   
   const toggleSpeaker = () => {
     setSpeakerEnabled(!speakerEnabled);
+    if (audioRef.current) {
+      audioRef.current.muted = !speakerEnabled;
+    }
     toast.info(`Speaker ${speakerEnabled ? 'muted' : 'unmuted'}`);
   };
   
@@ -189,6 +213,8 @@ const VideoCall = () => {
     setIsSpeaking(true);
     
     try {
+      console.log("Generating response for user message:", transcript);
+      
       // Generate response from the AI using enhanced API
       const response = await enhancedGenerateAvatarResponse(
         transcript,
@@ -199,22 +225,41 @@ const VideoCall = () => {
         elevenLabsApiKey
       );
       
-      // In a real app, we would update the video source and play the audio
+      console.log("Generated response:", response);
+      
+      // Play the audio
       if (audioRef.current && response.audioUrl) {
+        console.log("Playing audio response", response.audioUrl);
         audioRef.current.src = response.audioUrl;
-        audioRef.current.play();
+        audioRef.current.oncanplaythrough = () => {
+          if (!speakerEnabled) return;
+          audioRef.current?.play().catch(error => {
+            console.error("Error playing audio:", error);
+            toast.error("Couldn't play audio response");
+          });
+        };
+        
+        audioRef.current.onended = () => {
+          console.log("Response audio ended");
+          setIsSpeaking(false);
+        };
+        
+        audioRef.current.onerror = () => {
+          console.error("Error with audio playback");
+          setIsSpeaking(false);
+          toast.error("Error playing audio response");
+        };
+      } else {
+        console.error("Audio element or URL not available for response");
+        setIsSpeaking(false);
       }
       
-      // Simulate response timing
-      setTimeout(() => {
-        // Add echo response to internal record
-        setMessages(prev => [...prev, {
-          text: response.text || "I understand. How can I assist you further?",
-          sender: 'echo'
-        }]);
-        
-        setIsSpeaking(false);
-      }, 2000);
+      // Add echo response to internal record
+      setMessages(prev => [...prev, {
+        text: response.text || "I understand. How can I assist you further?",
+        sender: 'echo'
+      }]);
+      
     } catch (error) {
       console.error("Error processing voice input:", error);
       setIsSpeaking(false);
@@ -348,7 +393,11 @@ const VideoCall = () => {
         </div>
         
         {/* Hidden audio element for playing the avatar's voice */}
-        <audio ref={audioRef} className="hidden" />
+        <audio 
+          ref={audioRef} 
+          controls 
+          className={speakerEnabled ? "hidden" : "mt-4"}
+        />
       </main>
       
       {/* Fix for the style issue */}
