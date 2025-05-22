@@ -34,6 +34,8 @@ import Footer from "@/components/layout/Footer";
 import { User, Upload } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import VoiceCloner from "@/components/VoiceCloner";
 
 // Form validation schema
 const echoFormSchema = z.object({
@@ -72,6 +74,8 @@ const CreateEcho = () => {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>("english");
   const [availableVoices, setAvailableVoices] = useState(voiceOptions.english);
+  const [activeTab, setActiveTab] = useState<string>("predefined");
+  const [clonedVoice, setClonedVoice] = useState<{id: string, name: string} | null>(null);
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
@@ -112,21 +116,25 @@ const CreateEcho = () => {
     }
   };
 
+  // Handle when a voice is cloned
+  const handleVoiceCloned = (voiceId: string, name: string) => {
+    setClonedVoice({ id: voiceId, name });
+    form.setValue("voiceId", voiceId);
+    toast.success(`Voice "${name}" cloned successfully!`);
+    // Switch to predefined tab
+    setActiveTab("predefined");
+  };
+
   const onSubmit = (data: z.infer<typeof echoFormSchema>) => {
     if (!photoFile) {
       toast.error("Please upload a photo for your Echo");
       return;
     }
 
-    if (!isAuthenticated) {
-      toast.error("Please sign in to create your Echo");
-      navigate("/login");
-      return;
-    }
-
     // In a real app, we would send this data to a backend
     console.log("Form data:", data);
     console.log("Photo file:", photoFile);
+    console.log("Cloned voice:", clonedVoice);
     
     // Save echo data to localStorage for the dashboard
     const userId = JSON.parse(localStorage.getItem('user') || '{}').id;
@@ -142,7 +150,9 @@ const CreateEcho = () => {
       language: selectedLanguage,
       personalityTraits: data.personalityTraits,
       memories: data.memories || "",
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      isClonedVoice: !!clonedVoice,
+      clonedVoiceName: clonedVoice?.name || null
     };
     
     localStorage.setItem(`echoes_${userId}`, JSON.stringify([...existingEchoes, newEcho]));
@@ -227,93 +237,113 @@ const CreateEcho = () => {
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">Voice Selection</h3>
                     
-                    <div className="space-y-3">
-                      <Label>Select Language</Label>
-                      <RadioGroup 
-                        defaultValue="english"
-                        className="grid grid-cols-2 gap-2 sm:grid-cols-4"
-                        onValueChange={handleLanguageChange}
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="english" id="english" />
-                          <Label htmlFor="english">English</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="hindi" id="hindi" />
-                          <Label htmlFor="hindi">Hindi</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="telugu" id="telugu" />
-                          <Label htmlFor="telugu">Telugu</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="urdu" id="urdu" />
-                          <Label htmlFor="urdu">Urdu</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-
-                    <FormField
-                      control={form.control}
-                      name="voiceType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Voice Type</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange} 
-                            defaultValue={field.value}
+                    <Tabs defaultValue="predefined" value={activeTab} onValueChange={setActiveTab}>
+                      <TabsList className="grid grid-cols-2 mb-4">
+                        <TabsTrigger value="predefined">Predefined Voices</TabsTrigger>
+                        <TabsTrigger value="clone">Clone a Voice</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="predefined" className="space-y-4">
+                        <div className="space-y-3">
+                          <Label>Select Language</Label>
+                          <RadioGroup 
+                            defaultValue="english"
+                            className="grid grid-cols-2 gap-2 sm:grid-cols-4"
+                            onValueChange={handleLanguageChange}
                           >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a voice type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="warm">Warm & Friendly</SelectItem>
-                              <SelectItem value="authoritative">Authoritative</SelectItem>
-                              <SelectItem value="soothing">Calm & Soothing</SelectItem>
-                              <SelectItem value="energetic">Energetic & Upbeat</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            How would you like your Echo to sound?
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="english" id="english" />
+                              <Label htmlFor="english">English</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="hindi" id="hindi" />
+                              <Label htmlFor="hindi">Hindi</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="telugu" id="telugu" />
+                              <Label htmlFor="telugu">Telugu</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="urdu" id="urdu" />
+                              <Label htmlFor="urdu">Urdu</Label>
+                            </div>
+                          </RadioGroup>
+                        </div>
 
-                    <FormField
-                      control={form.control}
-                      name="voiceId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Voice Selection</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange} 
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a voice" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {availableVoices.map((voice) => (
-                                <SelectItem key={voice.id} value={voice.id}>
-                                  {voice.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Choose a specific voice for your Echo.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        <FormField
+                          control={form.control}
+                          name="voiceType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Voice Type</FormLabel>
+                              <Select 
+                                onValueChange={field.onChange} 
+                                defaultValue={field.value}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select a voice type" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="warm">Warm & Friendly</SelectItem>
+                                  <SelectItem value="authoritative">Authoritative</SelectItem>
+                                  <SelectItem value="soothing">Calm & Soothing</SelectItem>
+                                  <SelectItem value="energetic">Energetic & Upbeat</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormDescription>
+                                How would you like your Echo to sound?
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
+                        <FormField
+                          control={form.control}
+                          name="voiceId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Voice Selection</FormLabel>
+                              <Select 
+                                onValueChange={field.onChange} 
+                                defaultValue={field.value}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder={clonedVoice ? clonedVoice.name : "Select a voice"} />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {clonedVoice && (
+                                    <SelectItem value={clonedVoice.id} className="font-medium text-echoes-purple">
+                                      {clonedVoice.name} (Cloned)
+                                    </SelectItem>
+                                  )}
+                                  <SelectItem value="divider" disabled className="py-0 my-1">
+                                    <hr className="border-t border-gray-200" />
+                                  </SelectItem>
+                                  {availableVoices.map((voice) => (
+                                    <SelectItem key={voice.id} value={voice.id}>
+                                      {voice.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormDescription>
+                                Choose a specific voice for your Echo.
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </TabsContent>
+                      
+                      <TabsContent value="clone">
+                        <VoiceCloner onVoiceCloned={handleVoiceCloned} />
+                      </TabsContent>
+                    </Tabs>
                   </div>
 
                   <FormField

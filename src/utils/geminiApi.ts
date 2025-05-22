@@ -1,4 +1,5 @@
 
+// Legacy Gemini API function - kept for compatibility
 export interface GeminiApiResponse {
   audioUrl: string;
   videoUrl: string;

@@ -5,7 +5,7 @@ import { Mic, MicOff, Volume2, VolumeX, PhoneOff, Video, VideoOff } from "lucide
 import NavBar from "@/components/layout/NavBar";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { generateAvatarResponse } from "@/utils/geminiApi";
+import { enhancedGenerateAvatarResponse } from "@/utils/elevenLabsApi";
 
 const VideoCall = () => {
   const [searchParams] = useSearchParams();
@@ -32,6 +32,9 @@ const VideoCall = () => {
   
   // Gemini API key
   const geminiApiKey = "AIzaSyAFRE3-_HnJFeZkBV-4oHkyGGTdTriFxOM";
+  
+  // ElevenLabs API key - in a real app, this would be stored securely
+  const elevenLabsApiKey = "your-elevenlabs-api-key";
   
   // Check if user is authenticated
   useEffect(() => {
@@ -91,18 +94,25 @@ const VideoCall = () => {
       // Add greeting to internal message record
       setMessages([{text: greeting, sender: 'echo'}]);
       
-      // Simulate the avatar speaking the greeting using Gemini
+      // Simulate the avatar speaking the greeting using enhanced API
       setIsSpeaking(true);
       try {
-        const response = await generateAvatarResponse(
+        const response = await enhancedGenerateAvatarResponse(
           greeting, 
           echo.imageUrl || '/placeholder.svg',
-          echo.voice || 'en-US', 
-          geminiApiKey
+          echo.voiceId || 'EXAVITQu4vr4xnSDxMaL',
+          echo.language || 'en-US',
+          geminiApiKey,
+          elevenLabsApiKey
         );
         
         // In a real implementation, we would play the audio and show the video
         // For now, we'll just simulate the speaking duration
+        if (audioRef.current && response.audioUrl) {
+          audioRef.current.src = response.audioUrl;
+          audioRef.current.play();
+        }
+        
         setTimeout(() => {
           setIsSpeaking(false);
         }, 3000);
@@ -179,20 +189,27 @@ const VideoCall = () => {
     setIsSpeaking(true);
     
     try {
-      // Generate response from the AI using Gemini API
-      const response = await generateAvatarResponse(
+      // Generate response from the AI using enhanced API
+      const response = await enhancedGenerateAvatarResponse(
         transcript,
         echo.imageUrl || '/placeholder.svg',
-        echo.voice || 'en-US',
-        geminiApiKey
+        echo.voiceId || 'EXAVITQu4vr4xnSDxMaL',
+        echo.language || 'en-US',
+        geminiApiKey,
+        elevenLabsApiKey
       );
       
       // In a real app, we would update the video source and play the audio
-      // For now we'll simulate a response after a delay
+      if (audioRef.current && response.audioUrl) {
+        audioRef.current.src = response.audioUrl;
+        audioRef.current.play();
+      }
+      
+      // Simulate response timing
       setTimeout(() => {
         // Add echo response to internal record
         setMessages(prev => [...prev, {
-          text: "I understand. How can I assist you further?",
+          text: response.text || "I understand. How can I assist you further?",
           sender: 'echo'
         }]);
         
@@ -334,8 +351,8 @@ const VideoCall = () => {
         <audio ref={audioRef} className="hidden" />
       </main>
       
-      {/* CSS for speaking animation */}
-      <style jsx>{`
+      {/* Fix for the style issue */}
+      <style>{`
         @keyframes subtle-lip-movement {
           0% { transform: scaleY(1); }
           25% { transform: scaleY(0.98); }
