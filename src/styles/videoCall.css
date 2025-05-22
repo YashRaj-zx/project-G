@@ -1,0 +1,53 @@
+
+@keyframes subtle-lip-movement {
+  0% { transform: scaleY(1); }
+  25% { transform: scaleY(0.98); }
+  50% { transform: scaleY(0.96); }
+  75% { transform: scaleY(0.98); }
+  100% { transform: scaleY(1); }
+}
+
+.speaking-animation {
+  animation: subtle-lip-movement 0.3s infinite;
+  transform-origin: center bottom;
+}
+
+.voice-indicator {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.voice-dot {
+  height: 8px;
+  width: 8px;
+  border-radius: 50%;
+  background-color: #10b981;
+}
+
+.dot-1 {
+  animation: pulse 1.5s infinite;
+}
+
+.dot-2 {
+  animation: pulse 1.5s infinite 0.2s;
+}
+
+.dot-3 {
+  animation: pulse 1.5s infinite 0.4s;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+}

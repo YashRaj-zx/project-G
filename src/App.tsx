@@ -14,6 +14,7 @@ import Signup from "./pages/Signup";
 import CreateEcho from "./pages/CreateEcho";
 import Dashboard from "./pages/Dashboard";
 import { AuthProvider } from "./contexts/AuthContext";
+import "./styles/videoCall.css";
 
 const queryClient = new QueryClient();
 

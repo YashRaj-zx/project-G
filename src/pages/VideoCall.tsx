@@ -1,11 +1,11 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Volume2, VolumeX, PhoneOff } from "lucide-react";
+import { Mic, MicOff, Volume2, VolumeX, PhoneOff, Video, VideoOff } from "lucide-react";
 import NavBar from "@/components/layout/NavBar";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { generateAvatarResponse } from "@/utils/geminiApi";
 
 const VideoCall = () => {
   const [searchParams] = useSearchParams();
@@ -19,10 +19,19 @@ const VideoCall = () => {
   const [callDuration, setCallDuration] = useState(0);
   const [micEnabled, setMicEnabled] = useState(true);
   const [speakerEnabled, setSpeakerEnabled] = useState(true);
+  const [videoEnabled, setVideoEnabled] = useState(true);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  
+  // No longer using chat messages in state
+  // Note: We'll still keep the messages array for voice transcription records internally
   const [messages, setMessages] = useState<{text: string, sender: 'user' | 'echo'}[]>([]);
   
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const callTimerRef = useRef<NodeJS.Timeout>();
+  
+  // Gemini API key
+  const geminiApiKey = "AIzaSyAFRE3-_HnJFeZkBV-4oHkyGGTdTriFxOM";
   
   // Check if user is authenticated
   useEffect(() => {
@@ -66,7 +75,7 @@ const VideoCall = () => {
     };
   }, [isAuthenticated, navigate, echoId, user]);
   
-  const startCall = () => {
+  const startCall = async () => {
     setCallActive(true);
     toast.success(`Call with ${echo?.name} started`);
     
@@ -75,10 +84,32 @@ const VideoCall = () => {
       setCallDuration(prev => prev + 1);
     }, 1000);
     
-    // Add greeting message using user's name
-    if (user) {
+    // Generate initial greeting using user's name
+    if (user && echo) {
       const greeting = `Hello ${user.name}! It's great to see you. How can I help you today?`;
+      
+      // Add greeting to internal message record
       setMessages([{text: greeting, sender: 'echo'}]);
+      
+      // Simulate the avatar speaking the greeting using Gemini
+      setIsSpeaking(true);
+      try {
+        const response = await generateAvatarResponse(
+          greeting, 
+          echo.imageUrl || '/placeholder.svg',
+          echo.voice || 'en-US', 
+          geminiApiKey
+        );
+        
+        // In a real implementation, we would play the audio and show the video
+        // For now, we'll just simulate the speaking duration
+        setTimeout(() => {
+          setIsSpeaking(false);
+        }, 3000);
+      } catch (error) {
+        console.error("Error generating greeting:", error);
+        setIsSpeaking(false);
+      }
     }
     
     // In a real app, we would load a video of the generated avatar here
@@ -130,24 +161,65 @@ const VideoCall = () => {
     toast.info(`Speaker ${speakerEnabled ? 'muted' : 'unmuted'}`);
   };
   
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    const messageInput = document.getElementById('message-input') as HTMLInputElement;
-    const message = messageInput.value.trim();
+  const toggleVideo = () => {
+    setVideoEnabled(!videoEnabled);
+    toast.info(`Video ${videoEnabled ? 'disabled' : 'enabled'}`);
+  };
+  
+  const handleSendVoiceMessage = async (transcript: string) => {
+    // This function would be called when the user speaks and we get a transcript
+    // In a real implementation, this would be connected to a speech recognition API
     
-    if (!message) return;
+    if (!transcript.trim()) return;
     
-    // Add user message
-    setMessages(prev => [...prev, {text: message, sender: 'user'}]);
-    messageInput.value = '';
+    // Add user message to internal record
+    setMessages(prev => [...prev, {text: transcript, sender: 'user'}]);
     
-    // Simulate echo response (in a real app, this would come from an AI service)
+    // Simulate processing time
+    setIsSpeaking(true);
+    
+    try {
+      // Generate response from the AI using Gemini API
+      const response = await generateAvatarResponse(
+        transcript,
+        echo.imageUrl || '/placeholder.svg',
+        echo.voice || 'en-US',
+        geminiApiKey
+      );
+      
+      // In a real app, we would update the video source and play the audio
+      // For now we'll simulate a response after a delay
+      setTimeout(() => {
+        // Add echo response to internal record
+        setMessages(prev => [...prev, {
+          text: "I understand. How can I assist you further?",
+          sender: 'echo'
+        }]);
+        
+        setIsSpeaking(false);
+      }, 2000);
+    } catch (error) {
+      console.error("Error processing voice input:", error);
+      setIsSpeaking(false);
+      toast.error("Failed to process your message");
+    }
+  };
+  
+  // Simulated speech recognition - in a real app, this would use the Web Speech API
+  const startVoiceInput = () => {
+    if (!micEnabled) {
+      toast.error("Please unmute your microphone first");
+      return;
+    }
+    
+    // Simulate user speaking
+    toast.info("Listening...");
+    
+    // For demo purposes only - simulating speech recognition
     setTimeout(() => {
-      setMessages(prev => [...prev, {
-        text: `I understand. Tell me more about that.`,
-        sender: 'echo'
-      }]);
-    }, 1000);
+      const simulatedUserSpeech = "How are you doing today?";
+      handleSendVoiceMessage(simulatedUserSpeech);
+    }, 2000);
   };
   
   if (loading) {
@@ -169,13 +241,31 @@ const VideoCall = () => {
       
       <main className="flex-grow flex flex-col items-center justify-center py-16 px-4">
         <div className="relative w-full max-w-3xl aspect-video rounded-xl overflow-hidden shadow-2xl bg-gray-900">
-          {/* This would be a video in a real implementation */}
+          {/* Video feed area */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <img 
-              src={echo?.imageUrl || '/placeholder.svg'} 
-              alt={echo?.name} 
-              className="w-full h-full object-cover"
-            />
+            {videoEnabled ? (
+              <img 
+                src={echo?.imageUrl || '/placeholder.svg'} 
+                alt={echo?.name} 
+                className={`w-full h-full object-cover ${isSpeaking ? 'speaking-animation' : ''}`}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                <p className="text-white text-xl">Video Disabled</p>
+              </div>
+            )}
+            
+            {/* Add a visual indicator when the avatar is speaking */}
+            {isSpeaking && (
+              <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 bg-black/50 px-4 py-2 rounded-full">
+                <div className="flex items-center gap-2">
+                  <span className="inline-block h-2 w-2 bg-green-400 rounded-full animate-pulse"></span>
+                  <span className="inline-block h-3 w-3 bg-green-400 rounded-full animate-pulse delay-150"></span>
+                  <span className="inline-block h-2 w-2 bg-green-400 rounded-full animate-pulse delay-300"></span>
+                  <span className="text-white text-sm">Speaking...</span>
+                </div>
+              </div>
+            )}
           </div>
           
           {/* Call duration overlay */}
@@ -216,50 +306,49 @@ const VideoCall = () => {
             >
               {speakerEnabled ? <Volume2 /> : <VolumeX />}
             </Button>
+            
+            <Button
+              onClick={toggleVideo}
+              variant="outline"
+              size="icon"
+              className={`rounded-full w-12 h-12 ${videoEnabled ? 'bg-white text-black' : 'bg-red-600 text-white'}`}
+            >
+              {videoEnabled ? <Video /> : <VideoOff />}
+            </Button>
           </div>
         </div>
         
-        {/* Chat interface */}
-        <div className="w-full max-w-3xl mt-8 bg-background rounded-xl p-4">
-          <h2 className="text-xl font-semibold mb-4">Chat with {echo?.name}</h2>
-          
-          <div className="h-64 overflow-y-auto mb-4 border rounded-md p-2">
-            {messages.length === 0 ? (
-              <p className="text-center text-gray-400 my-12">
-                {callActive 
-                  ? "Your conversation will appear here..." 
-                  : "Call will begin shortly..."}
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {messages.map((msg, index) => (
-                  <div 
-                    key={index} 
-                    className={`p-2 rounded-lg max-w-[80%] ${
-                      msg.sender === 'user' 
-                        ? 'bg-echoes-purple/10 ml-auto' 
-                        : 'bg-gray-100 mr-auto'
-                    }`}
-                  >
-                    {msg.text}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          <form onSubmit={handleSendMessage} className="flex gap-2">
-            <input
-              id="message-input"
-              type="text"
-              className="flex-grow rounded-md border p-2"
-              placeholder="Type your message..."
-              disabled={!callActive}
-            />
-            <Button type="submit" disabled={!callActive}>Send</Button>
-          </form>
+        <div className="w-full max-w-3xl flex justify-center mt-8">
+          {callActive && (
+            <Button 
+              onClick={startVoiceInput} 
+              disabled={!micEnabled || isSpeaking}
+              className="bg-echoes-purple hover:bg-echoes-purple/90 text-white px-8 py-2 rounded-full"
+            >
+              {isSpeaking ? "Echo is speaking..." : "Hold to speak"}
+            </Button>
+          )}
         </div>
+        
+        {/* Hidden audio element for playing the avatar's voice */}
+        <audio ref={audioRef} className="hidden" />
       </main>
+      
+      {/* CSS for speaking animation */}
+      <style jsx>{`
+        @keyframes subtle-lip-movement {
+          0% { transform: scaleY(1); }
+          25% { transform: scaleY(0.98); }
+          50% { transform: scaleY(0.96); }
+          75% { transform: scaleY(0.98); }
+          100% { transform: scaleY(1); }
+        }
+        
+        .speaking-animation {
+          animation: subtle-lip-movement 0.3s infinite;
+          transform-origin: center bottom;
+        }
+      `}</style>
     </div>
   );
 };
