@@ -33,8 +33,8 @@ const VideoCall = () => {
   // Gemini API key
   const geminiApiKey = "AIzaSyAFRE3-_HnJFeZkBV-4oHkyGGTdTriFxOM";
   
-  // ElevenLabs API key - in a real app, this would be stored securely
-  const elevenLabsApiKey = "your-elevenlabs-api-key";
+  // ElevenLabs API key - now using the real key
+  const elevenLabsApiKey = "sk_a358fd141a5dfcbbabf5b62557a4b7b503b132c84a710347";
   
   // Check if user is authenticated
   useEffect(() => {

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,9 +22,8 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
   const mediaRecorderRef = React.useRef<MediaRecorder | null>(null);
   const audioChunksRef = React.useRef<Blob[]>([]);
   
-  // ElevenLabs API key - in production this would be stored securely
-  // This is just for demonstration purposes
-  const elevenLabsApiKey = "your-elevenlabs-api-key";
+  // ElevenLabs API key
+  const elevenLabsApiKey = "sk_a358fd141a5dfcbbabf5b62557a4b7b503b132c84a710347";
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;

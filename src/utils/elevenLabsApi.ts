@@ -14,13 +14,10 @@ interface TextToSpeechResponse {
 export const cloneVoice = async (
   name: string,
   audioFile: File,
-  apiKey: string
+  apiKey: string = "sk_a358fd141a5dfcbbabf5b62557a4b7b503b132c84a710347"
 ): Promise<VoiceCloneResponse> => {
   try {
     console.log(`Cloning voice with name: ${name}`);
-    
-    // In a real implementation, this would make an actual call to ElevenLabs API
-    // For now, we'll simulate it
     
     // Create a form data object
     const formData = new FormData();
@@ -28,26 +25,23 @@ export const cloneVoice = async (
     formData.append('audio', audioFile);
     
     // This would be the actual API call in production
-    // const response = await fetch('https://api.elevenlabs.io/v1/voices/add', {
-    //   method: 'POST',
-    //   headers: {
-    //     'xi-api-key': apiKey,
-    //   },
-    //   body: formData,
-    // });
+    const response = await fetch('https://api.elevenlabs.io/v1/voices/add', {
+      method: 'POST',
+      headers: {
+        'xi-api-key': apiKey || "sk_a358fd141a5dfcbbabf5b62557a4b7b503b132c84a710347",
+      },
+      body: formData,
+    });
     
-    // if (!response.ok) {
-    //   throw new Error('Failed to clone voice');
-    // }
+    if (!response.ok) {
+      throw new Error('Failed to clone voice');
+    }
     
-    // const data = await response.json();
+    const data = await response.json();
     
-    // For now, simulate a response
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Return a simulated voice ID (in production, we'd get this from the API)
+    // Return the voice ID and name from the API response
     return {
-      voiceId: `cloned-voice-${Date.now()}`,
+      voiceId: data.voice_id,
       name: name,
     };
   } catch (error) {
@@ -60,40 +54,33 @@ export const cloneVoice = async (
 export const textToSpeech = async (
   text: string,
   voiceId: string,
-  apiKey: string
+  apiKey: string = "sk_a358fd141a5dfcbbabf5b62557a4b7b503b132c84a710347"
 ): Promise<TextToSpeechResponse> => {
   try {
     console.log(`Converting text to speech using voice ID: ${voiceId}`);
     
-    // In a real implementation, this would make an actual call to the ElevenLabs API
-    // For now, we'll simulate the response
+    // Make the actual API call to ElevenLabs
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+      method: 'POST',
+      headers: {
+        'xi-api-key': apiKey || "sk_a358fd141a5dfcbbabf5b62557a4b7b503b132c84a710347",
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        text,
+        model_id: 'eleven_multilingual_v2',
+      }),
+    });
     
-    // This would be the actual API call in production
-    // const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-    //   method: 'POST',
-    //   headers: {
-    //     'xi-api-key': apiKey,
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify({
-    //     text,
-    //     model_id: 'eleven_multilingual_v2',
-    //   }),
-    // });
+    if (!response.ok) {
+      throw new Error('Failed to convert text to speech');
+    }
     
-    // if (!response.ok) {
-    //   throw new Error('Failed to convert text to speech');
-    // }
+    const audioBlob = await response.blob();
+    const audioUrl = URL.createObjectURL(audioBlob);
     
-    // const audioBlob = await response.blob();
-    // const audioUrl = URL.createObjectURL(audioBlob);
-    
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Return a simulated audio URL
     return {
-      audioUrl: "simulated-audio-url",
+      audioUrl: audioUrl,
     };
   } catch (error) {
     console.error("Error converting text to speech:", error);
@@ -102,19 +89,29 @@ export const textToSpeech = async (
 };
 
 // Get available voices from ElevenLabs
-export const getAvailableVoices = async (apiKey: string): Promise<any[]> => {
+export const getAvailableVoices = async (apiKey: string = "sk_a358fd141a5dfcbbabf5b62557a4b7b503b132c84a710347"): Promise<any[]> => {
   try {
-    // In a real implementation, this would fetch available voices from ElevenLabs
-    // For now, return some sample voices
+    // Fetch available voices from ElevenLabs
+    const response = await fetch("https://api.elevenlabs.io/v1/voices", {
+      headers: {
+        'xi-api-key': apiKey || "sk_a358fd141a5dfcbbabf5b62557a4b7b503b132c84a710347",
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch voices');
+    }
+    
+    const data = await response.json();
+    return data.voices || [];
+  } catch (error) {
+    console.error("Error fetching voices:", error);
     return [
       { voice_id: "EXAVITQu4vr4xnSDxMaL", name: "Sarah" },
       { voice_id: "CwhRBWXzGAHq8TQ4Fs17", name: "Roger" },
       { voice_id: "IKne3meq5aSn9XLyUdCD", name: "Charlie" },
       { voice_id: "JBFqnCBsd6RMkjVDRZzb", name: "George" }
     ];
-  } catch (error) {
-    console.error("Error fetching voices:", error);
-    return [];
   }
 };
 
@@ -124,8 +121,8 @@ export const enhancedGenerateAvatarResponse = async (
   imageUrl: string,
   voiceId: string,
   language: string,
-  apiKey: string,
-  elevenLabsApiKey: string
+  geminiApiKey: string,
+  elevenLabsApiKey: string = "sk_a358fd141a5dfcbbabf5b62557a4b7b503b132c84a710347"
 ): Promise<any> => {
   try {
     // First generate the text response using Gemini (simulated)
