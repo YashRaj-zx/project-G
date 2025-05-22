@@ -16,11 +16,20 @@ interface AuthContextType {
   signup: (userData: Omit<User, "id" | "createdAt"> & { password: string }) => User;
 }
 
+// Create a default guest user
+const guestUser: User = {
+  id: 'guest-user',
+  name: 'Guest',
+  email: 'guest@example.com',
+  createdAt: new Date().toISOString()
+};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  // Always start with an authenticated state using the guest user
+  const [user, setUser] = useState<User | null>(guestUser);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
 
   // Check for existing user data on mount
   useEffect(() => {
@@ -28,70 +37,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (storedUser) {
       const userData = JSON.parse(storedUser);
       setUser(userData);
-      setIsAuthenticated(true);
+    } else {
+      // If no user exists in localStorage, set the guest user
+      localStorage.setItem('user', JSON.stringify(guestUser));
     }
   }, []);
 
+  // These authentication functions are kept for backwards compatibility
+  // but now they will always succeed and have minimal effect
   const login = (credentials: {email: string, password: string}) => {
-    // Check if user exists in stored users
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const existingUser = users.find((u: any) => u.email === credentials.email);
+    // Set a custom name if provided in email field (for guest personalization)
+    const customName = credentials.email ? credentials.email.split('@')[0] : 'Guest';
+    const customUser = {
+      ...guestUser,
+      name: customName.charAt(0).toUpperCase() + customName.slice(1), // Capitalize first letter
+    };
     
-    if (!existingUser) {
-      throw new Error("User does not exist");
-    }
-    
-    // Verify password
-    if (existingUser.password !== credentials.password) {
-      throw new Error("Invalid password");
-    }
-    
-    // Extract user data without password
-    const { password, ...userData } = existingUser;
-    
-    // Store current user session
-    localStorage.setItem('user', JSON.stringify(userData));
-    setUser(userData);
-    setIsAuthenticated(true);
-    
-    return userData;
+    localStorage.setItem('user', JSON.stringify(customUser));
+    setUser(customUser);
+    return customUser;
   };
 
   const signup = (userData: Omit<User, "id" | "createdAt"> & { password: string }) => {
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    
-    // Check if user already exists
-    const existingUser = users.find((u: any) => u.email === userData.email);
-    if (existingUser) {
-      throw new Error("User with this email already exists");
-    }
-    
-    // Create new user
     const newUser = {
       ...userData,
       id: `user-${Date.now()}`,
       createdAt: new Date().toISOString()
     };
     
-    // Store user in users array
-    localStorage.setItem('users', JSON.stringify([...users, newUser]));
-    
-    // Store current user session (without password)
+    // Store user data without password
     const { password, ...userWithoutPassword } = newUser;
     localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-    
-    // Update state
     setUser(userWithoutPassword);
-    setIsAuthenticated(true);
     
     return userWithoutPassword;
   };
 
   const logout = () => {
-    // Only remove the current user session, not the stored data
-    localStorage.removeItem('user');
-    setUser(null);
-    setIsAuthenticated(false);
+    // Reset to the guest user
+    localStorage.setItem('user', JSON.stringify(guestUser));
+    setUser(guestUser);
   };
 
   return (

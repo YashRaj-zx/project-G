@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -33,25 +32,17 @@ interface Call {
 }
 
 const Dashboard = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [echoes, setEchoes] = useState<Echo[]>([]);
   const [calls, setCalls] = useState<Call[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Redirect if not authenticated
+  // Load data from localStorage based on user ID
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/login");
-      toast.error("Please login to access your dashboard");
-    }
-  }, [isAuthenticated, navigate]);
-
-  // Load real user data from localStorage
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      setLoading(true);
-      
+    setLoading(true);
+    
+    if (user) {
       // Get user's echoes
       const storedEchoes = localStorage.getItem(`echoes_${user.id}`);
       if (storedEchoes) {
@@ -63,23 +54,14 @@ const Dashboard = () => {
       if (storedCalls) {
         setCalls(JSON.parse(storedCalls));
       }
-      
-      setLoading(false);
     }
-  }, [isAuthenticated, user]);
+    
+    setLoading(false);
+  }, [user]);
 
   const handleStartCall = (echoId: string) => {
-    if (!isAuthenticated) {
-      toast.error("Please login to start a call");
-      navigate("/login");
-      return;
-    }
     navigate(`/video-call?echo=${echoId}`);
   };
-
-  if (!isAuthenticated) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -87,7 +69,7 @@ const Dashboard = () => {
       <main className="flex-grow py-16 px-4 pt-24">
         <div className="max-w-7xl mx-auto">
           <div className="mb-10">
-            <h1 className="text-3xl font-bold text-gradient mb-2">Welcome, {user?.name}</h1>
+            <h1 className="text-3xl font-bold text-gradient mb-2">Welcome, {user?.name || 'Guest'}</h1>
             <p className="text-foreground/60">Manage your echoes and past conversations</p>
           </div>
 
@@ -123,7 +105,14 @@ const Dashboard = () => {
                   </Card>
                 ) : echoes.length === 0 ? (
                   <Card className="h-64 flex items-center justify-center col-span-2">
-                    <p className="text-center text-muted-foreground">You haven't created any echoes yet.</p>
+                    <CardContent className="flex flex-col items-center justify-center text-center">
+                      <p className="text-center text-muted-foreground mb-4">You haven't created any echoes yet.</p>
+                      <Link to="/create-echo">
+                        <Button className="bg-echoes-purple hover:bg-echoes-accent">
+                          Create Your First Echo
+                        </Button>
+                      </Link>
+                    </CardContent>
                   </Card>
                 ) : (
                   echoes.map(echo => (
