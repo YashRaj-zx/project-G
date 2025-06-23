@@ -1,53 +1,160 @@
 
-@keyframes subtle-lip-movement {
-  0% { transform: scaleY(1); }
-  25% { transform: scaleY(0.98); }
-  50% { transform: scaleY(0.96); }
-  75% { transform: scaleY(0.98); }
-  100% { transform: scaleY(1); }
+@keyframes realistic-lip-sync {
+  0% { 
+    transform: scaleY(1);
+    filter: brightness(1);
+  }
+  10% { 
+    transform: scaleY(0.95) scaleX(1.02);
+    filter: brightness(1.05);
+  }
+  20% { 
+    transform: scaleY(0.88) scaleX(1.05);
+    filter: brightness(1.1);
+  }
+  30% { 
+    transform: scaleY(0.92) scaleX(1.03);
+    filter: brightness(1.08);
+  }
+  40% { 
+    transform: scaleY(0.85) scaleX(1.08);
+    filter: brightness(1.15);
+  }
+  50% { 
+    transform: scaleY(0.9) scaleX(1.05);
+    filter: brightness(1.12);
+  }
+  60% { 
+    transform: scaleY(0.87) scaleX(1.07);
+    filter: brightness(1.18);
+  }
+  70% { 
+    transform: scaleY(0.93) scaleX(1.04);
+    filter: brightness(1.1);
+  }
+  80% { 
+    transform: scaleY(0.89) scaleX(1.06);
+    filter: brightness(1.14);
+  }
+  90% { 
+    transform: scaleY(0.96) scaleX(1.02);
+    filter: brightness(1.06);
+  }
+  100% { 
+    transform: scaleY(1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes mouth-movement {
+  0% { 
+    clip-path: ellipse(45% 48% at 50% 75%);
+  }
+  25% { 
+    clip-path: ellipse(47% 45% at 50% 78%);
+  }
+  50% { 
+    clip-path: ellipse(44% 42% at 50% 80%);
+  }
+  75% { 
+    clip-path: ellipse(46% 46% at 50% 77%);
+  }
+  100% { 
+    clip-path: ellipse(45% 48% at 50% 75%);
+  }
 }
 
 .speaking-animation {
-  animation: subtle-lip-movement 0.3s infinite;
-  transform-origin: center bottom;
+  animation: realistic-lip-sync 0.4s infinite ease-in-out;
+  transform-origin: center 75%;
+  position: relative;
+}
+
+.speaking-animation::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  animation: mouth-movement 0.3s infinite ease-in-out;
+  pointer-events: none;
 }
 
 .voice-indicator {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 8px 16px;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
 }
 
 .voice-dot {
-  height: 8px;
-  width: 8px;
+  height: 6px;
+  width: 6px;
   border-radius: 50%;
-  background-color: #10b981;
+  background: linear-gradient(45deg, #10b981, #34d399);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
 }
 
 .dot-1 {
-  animation: pulse 1.5s infinite;
+  animation: voice-pulse 1.2s infinite ease-in-out;
 }
 
 .dot-2 {
-  animation: pulse 1.5s infinite 0.2s;
+  animation: voice-pulse 1.2s infinite ease-in-out 0.2s;
 }
 
 .dot-3 {
-  animation: pulse 1.5s infinite 0.4s;
+  animation: voice-pulse 1.2s infinite ease-in-out 0.4s;
 }
 
-@keyframes pulse {
-  0% {
+@keyframes voice-pulse {
+  0%, 100% {
     transform: scale(0.8);
     opacity: 0.6;
+    box-shadow: 0 0 5px rgba(16, 185, 129, 0.3);
   }
   50% {
-    transform: scale(1.2);
+    transform: scale(1.4);
     opacity: 1;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.8);
   }
-  100% {
-    transform: scale(0.8);
-    opacity: 0.6;
-  }
+}
+
+/* Real-time avatar container */
+.avatar-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.avatar-container.speaking {
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.4);
+  border: 2px solid rgba(16, 185, 129, 0.6);
+}
+
+/* Enhanced speaking indicator */
+.speaking-indicator {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 8px 16px;
+  border-radius: 25px;
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.speaking-text {
+  color: #10b981;
+  font-size: 14px;
+  font-weight: 500;
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
 }

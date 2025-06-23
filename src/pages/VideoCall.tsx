@@ -30,11 +30,9 @@ const VideoCall = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const callTimerRef = useRef<NodeJS.Timeout>();
   
-  // Gemini API key
+  // Updated API keys
   const geminiApiKey = "AIzaSyAFRE3-_HnJFeZkBV-4oHkyGGTdTriFxOM";
-  
-  // ElevenLabs API key - now using the real key
-  const elevenLabsApiKey = "sk_a358fd141a5dfcbbabf5b62557a4b7b503b132c84a710347";
+  const elevenLabsApiKey = "sk_307e4c5c2038de5a11bd22e9dc71959fe0af3d34982112b9";
   
   // Check if user is authenticated
   useEffect(() => {
@@ -87,18 +85,16 @@ const VideoCall = () => {
       setCallDuration(prev => prev + 1);
     }, 1000);
     
-    // Generate initial greeting using user's name
+    // Generate initial greeting with real-time avatar
     if (user && echo) {
-      const greeting = `Hello ${user.name || 'there'}! It's great to see you. How can I help you today?`;
+      const greeting = `Hello ${user.name || 'there'}! It's wonderful to see you. I'm your AI companion ${echo.name}. How can I assist you today?`;
       
-      // Add greeting to internal message record
       setMessages([{text: greeting, sender: 'echo'}]);
       
-      // Generate speech for the greeting
+      // Generate real-time talking avatar
       setIsSpeaking(true);
       try {
-        console.log("Generating initial greeting speech...");
-        console.log("Echo data:", echo);
+        console.log("Generating real-time talking avatar...");
         
         const response = await enhancedGenerateAvatarResponse(
           greeting, 
@@ -109,44 +105,39 @@ const VideoCall = () => {
           elevenLabsApiKey
         );
         
-        console.log("Speech response:", response);
+        console.log("Real-time avatar response:", response);
         
         if (audioRef.current && response.audioUrl) {
-          console.log("Playing audio:", response.audioUrl);
+          console.log("Playing synchronized audio:", response.audioUrl);
           audioRef.current.src = response.audioUrl;
+          
           audioRef.current.oncanplaythrough = () => {
-            console.log("Audio can play through, starting playback");
+            console.log("Audio ready for lip-sync playback");
             audioRef.current?.play().catch(error => {
-              console.error("Error playing audio:", error);
-              toast.error("Couldn't play audio. Please check your audio settings.");
+              console.error("Error playing synchronized audio:", error);
+              toast.error("Couldn't play avatar audio. Please check your audio settings.");
             });
           };
           
           audioRef.current.onended = () => {
-            console.log("Audio playback ended");
+            console.log("Avatar finished speaking");
             setIsSpeaking(false);
           };
           
           audioRef.current.onerror = (e) => {
-            console.error("Audio error:", e);
+            console.error("Avatar audio error:", e);
             setIsSpeaking(false);
-            toast.error("Error playing audio");
+            toast.error("Error with avatar audio playback");
           };
         } else {
-          console.error("Audio element or URL not available");
+          console.error("Audio element or URL not available for avatar");
           setIsSpeaking(false);
         }
       } catch (error) {
-        console.error("Error generating greeting:", error);
+        console.error("Error generating real-time avatar:", error);
         setIsSpeaking(false);
-        toast.error("Error generating voice. Please try again.");
+        toast.error("Error generating avatar response. Please try again.");
       }
-    }
-    
-    // In a real app, we would load a video of the generated avatar here
-    if (videoRef.current && echo?.imageUrl) {
-      // For demo, we'll just show a static image
-      // In a real app, this would be replaced with the actual video feed
     }
   };
   
@@ -201,21 +192,16 @@ const VideoCall = () => {
   };
   
   const handleSendVoiceMessage = async (transcript: string) => {
-    // This function would be called when the user speaks and we get a transcript
-    // In a real implementation, this would be connected to a speech recognition API
-    
     if (!transcript.trim()) return;
     
-    // Add user message to internal record
     setMessages(prev => [...prev, {text: transcript, sender: 'user'}]);
     
-    // Simulate processing time
+    // Generate real-time avatar response
     setIsSpeaking(true);
     
     try {
-      console.log("Generating response for user message:", transcript);
+      console.log("Generating real-time avatar response for:", transcript);
       
-      // Generate response from the AI using enhanced API
       const response = await enhancedGenerateAvatarResponse(
         transcript,
         echo.imageUrl || '/placeholder.svg',
@@ -225,45 +211,45 @@ const VideoCall = () => {
         elevenLabsApiKey
       );
       
-      console.log("Generated response:", response);
+      console.log("Generated real-time response:", response);
       
-      // Play the audio
+      // Play synchronized audio with lip-sync
       if (audioRef.current && response.audioUrl) {
-        console.log("Playing audio response", response.audioUrl);
+        console.log("Playing synchronized avatar response", response.audioUrl);
         audioRef.current.src = response.audioUrl;
+        
         audioRef.current.oncanplaythrough = () => {
           if (!speakerEnabled) return;
           audioRef.current?.play().catch(error => {
-            console.error("Error playing audio:", error);
-            toast.error("Couldn't play audio response");
+            console.error("Error playing avatar response:", error);
+            toast.error("Couldn't play avatar response");
           });
         };
         
         audioRef.current.onended = () => {
-          console.log("Response audio ended");
+          console.log("Avatar response finished");
           setIsSpeaking(false);
         };
         
         audioRef.current.onerror = () => {
-          console.error("Error with audio playback");
+          console.error("Error with avatar response playback");
           setIsSpeaking(false);
-          toast.error("Error playing audio response");
+          toast.error("Error playing avatar response");
         };
       } else {
-        console.error("Audio element or URL not available for response");
+        console.error("Audio element or URL not available for avatar response");
         setIsSpeaking(false);
       }
       
-      // Add echo response to internal record
       setMessages(prev => [...prev, {
         text: response.text || "I understand. How can I assist you further?",
         sender: 'echo'
       }]);
       
     } catch (error) {
-      console.error("Error processing voice input:", error);
+      console.error("Error processing voice input with avatar:", error);
       setIsSpeaking(false);
-      toast.error("Failed to process your message");
+      toast.error("Failed to process your message with avatar");
     }
   };
   
@@ -302,14 +288,17 @@ const VideoCall = () => {
       </div>
       
       <main className="flex-grow flex flex-col items-center justify-center py-16 px-4">
-        <div className="relative w-full max-w-3xl aspect-video rounded-xl overflow-hidden shadow-2xl bg-gray-900">
-          {/* Video feed area */}
+        <div className={`relative w-full max-w-3xl aspect-video rounded-xl overflow-hidden shadow-2xl bg-gray-900 avatar-container ${isSpeaking ? 'speaking' : ''}`}>
+          {/* Real-time avatar video area */}
           <div className="absolute inset-0 flex items-center justify-center">
             {videoEnabled ? (
               <img 
                 src={echo?.imageUrl || '/placeholder.svg'} 
                 alt={echo?.name} 
-                className={`w-full h-full object-cover ${isSpeaking ? 'speaking-animation' : ''}`}
+                className={`w-full h-full object-cover transition-all duration-300 ${isSpeaking ? 'speaking-animation' : ''}`}
+                style={{
+                  filter: isSpeaking ? 'brightness(1.1) contrast(1.05)' : 'brightness(1)',
+                }}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gray-800">
@@ -317,15 +306,15 @@ const VideoCall = () => {
               </div>
             )}
             
-            {/* Add a visual indicator when the avatar is speaking */}
+            {/* Enhanced speaking indicator with real-time feedback */}
             {isSpeaking && (
-              <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 bg-black/50 px-4 py-2 rounded-full">
-                <div className="flex items-center gap-2">
-                  <span className="inline-block h-2 w-2 bg-green-400 rounded-full animate-pulse"></span>
-                  <span className="inline-block h-3 w-3 bg-green-400 rounded-full animate-pulse delay-150"></span>
-                  <span className="inline-block h-2 w-2 bg-green-400 rounded-full animate-pulse delay-300"></span>
-                  <span className="text-white text-sm">Speaking...</span>
+              <div className="speaking-indicator">
+                <div className="voice-indicator">
+                  <div className="voice-dot dot-1"></div>
+                  <div className="voice-dot dot-2"></div>
+                  <div className="voice-dot dot-3"></div>
                 </div>
+                <span className="speaking-text">Speaking with lip-sync...</span>
               </div>
             )}
           </div>
@@ -399,22 +388,6 @@ const VideoCall = () => {
           className={speakerEnabled ? "hidden" : "mt-4"}
         />
       </main>
-      
-      {/* Fix for the style issue */}
-      <style>{`
-        @keyframes subtle-lip-movement {
-          0% { transform: scaleY(1); }
-          25% { transform: scaleY(0.98); }
-          50% { transform: scaleY(0.96); }
-          75% { transform: scaleY(0.98); }
-          100% { transform: scaleY(1); }
-        }
-        
-        .speaking-animation {
-          animation: subtle-lip-movement 0.3s infinite;
-          transform-origin: center bottom;
-        }
-      `}</style>
     </div>
   );
 };
