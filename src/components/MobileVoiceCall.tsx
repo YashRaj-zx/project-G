@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Volume2, VolumeX, PhoneOff, Phone } from "lucide-react";
+import { Mic, MicOff, Volume2, VolumeX, PhoneOff } from "lucide-react";
 import { textToSpeech, getValidVoiceId } from "@/utils/elevenLabsApi";
 import { toast } from "sonner";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -25,8 +25,7 @@ const MobileVoiceCall = ({ echo, onEndCall }: MobileVoiceCallProps) => {
   const [callDuration, setCallDuration] = useState(0);
   
   const audioRef = useRef<HTMLAudioElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const callTimerRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
@@ -35,23 +34,39 @@ const MobileVoiceCall = ({ echo, onEndCall }: MobileVoiceCallProps) => {
       setCallDuration(prev => prev + 1);
     }, 1000);
 
-    // Initialize speech recognition
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = window.webkitSpeechRecognition || window.SpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang = 'en-US';
+    // Initialize speech recognition with proper type handling
+    const initSpeechRecognition = () => {
+      const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      
+      if (SpeechRecognitionAPI) {
+        const recognition = new SpeechRecognitionAPI() as SpeechRecognition;
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
 
-      recognitionRef.current.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        handleUserSpeech(transcript);
-      };
+        recognition.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          handleUserSpeech(transcript);
+        };
 
-      recognitionRef.current.onend = () => {
-        setIsListening(false);
-      };
-    }
+        recognition.onend = () => {
+          setIsListening(false);
+        };
+
+        recognition.onerror = (event) => {
+          console.error('Speech recognition error:', event);
+          setIsListening(false);
+          toast.error("Speech recognition failed");
+        };
+
+        recognitionRef.current = recognition;
+      } else {
+        console.warn('Speech Recognition not supported');
+        toast.error("Speech recognition not supported in this browser");
+      }
+    };
+
+    initSpeechRecognition();
 
     // Simulate connection after 2 seconds
     const connectTimer = setTimeout(() => {
@@ -118,15 +133,21 @@ const MobileVoiceCall = ({ echo, onEndCall }: MobileVoiceCallProps) => {
 
     if (recognitionRef.current && !isListening && !isSpeaking) {
       setIsListening(true);
-      recognitionRef.current.start();
-      toast.info("Listening...");
+      try {
+        recognitionRef.current.start();
+        toast.info("Listening...");
+      } catch (error) {
+        console.error("Failed to start speech recognition:", error);
+        setIsListening(false);
+        toast.error("Failed to start listening");
+      }
     }
   };
 
   const toggleMic = () => {
     setMicEnabled(!micEnabled);
-    if (isListening) {
-      recognitionRef.current?.stop();
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
       setIsListening(false);
     }
     toast.info(`Microphone ${micEnabled ? 'muted' : 'unmuted'}`);
