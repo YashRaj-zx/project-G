@@ -22,8 +22,8 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
   const mediaRecorderRef = React.useRef<MediaRecorder | null>(null);
   const audioChunksRef = React.useRef<Blob[]>([]);
   
-  // ElevenLabs API key
-  const elevenLabsApiKey = "sk_a358fd141a5dfcbbabf5b62557a4b7b503b132c84a710347";
+  // Updated ElevenLabs API key
+  const elevenLabsApiKey = "sk_307e4c5c2038de5a11bd22e9dc71959fe0af3d34982112b9";
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
@@ -117,16 +117,17 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
       // Call the callback with the cloned voice ID and name
       onVoiceCloned(result.voiceId, result.name);
       
-      toast.success("Voice cloned successfully!");
+      toast.success("Voice cloned successfully! You can now use this voice in calls.");
       
       // Reset the form
       setAudioFile(null);
       setVoiceName("");
       setAudioPreview(null);
+      setProgress(0);
     } catch (error) {
       clearInterval(progressInterval);
       console.error("Error cloning voice:", error);
-      toast.error("Failed to clone voice. Please try again.");
+      toast.error("Failed to clone voice. Please try again with a clear audio sample.");
     } finally {
       setIsCloning(false);
     }

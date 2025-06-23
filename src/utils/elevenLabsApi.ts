@@ -30,10 +30,10 @@ const DEFAULT_VOICES = {
 };
 
 // Function to validate and get a proper voice ID
-const getValidVoiceId = (voiceId: string): string => {
+export const getValidVoiceId = (voiceId: string): string => {
   console.log(`Validating voice ID: ${voiceId}`);
   
-  // If it's already a valid ElevenLabs voice ID format (26 characters alphanumeric)
+  // If it's already a valid ElevenLabs voice ID format (20 characters alphanumeric)
   if (voiceId && voiceId.length === 20 && /^[a-zA-Z0-9]+$/.test(voiceId)) {
     console.log(`Using provided voice ID: ${voiceId}`);
     return voiceId;
@@ -120,8 +120,8 @@ export const textToSpeech = async (
     });
     
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error("Text to speech API error:", errorData);
+      const errorText = await response.text().catch(() => 'Unknown error');
+      console.error("Text to speech API error:", errorText);
       throw new Error(`Failed to convert text to speech: ${response.status} ${response.statusText}`);
     }
     
