@@ -1,4 +1,3 @@
-
 // ElevenLabs API integration for voice cloning and synthesis with real-time avatars
 
 interface VoiceCloneResponse {
@@ -58,12 +57,26 @@ export const cloneVoice = async (
   apiKey: string = ELEVENLABS_VOICE_API_KEY
 ): Promise<VoiceCloneResponse> => {
   try {
-    console.log(`Cloning voice with name: ${name}`);
+    console.log(`Starting voice cloning process for: ${name}`);
+    console.log(`Audio file size: ${audioFile.size} bytes`);
+    console.log(`Audio file type: ${audioFile.type}`);
     
+    // Validate audio file
+    if (audioFile.size === 0) {
+      throw new Error("Audio file is empty");
+    }
+    
+    if (audioFile.size > 25 * 1024 * 1024) { // 25MB limit
+      throw new Error("Audio file is too large. Maximum size is 25MB");
+    }
+    
+    // Create FormData properly
     const formData = new FormData();
-    formData.append('name', name);
-    formData.append('files', audioFile);
-    formData.append('description', `Cloned voice for ${name}`);
+    formData.append('name', name.trim());
+    formData.append('description', `Voice cloned from ${name} - Created by Echoes`);
+    formData.append('files', audioFile, audioFile.name || 'voice_sample.wav');
+    
+    console.log(`Making request to ElevenLabs API...`);
     
     const response = await fetch('https://api.elevenlabs.io/v1/voices/add', {
       method: 'POST',
@@ -73,22 +86,48 @@ export const cloneVoice = async (
       body: formData,
     });
     
+    console.log(`API Response status: ${response.status}`);
+    
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error("ElevenLabs API error:", errorData);
-      throw new Error(`Failed to clone voice: ${response.status} ${response.statusText}`);
+      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      
+      try {
+        const errorData = await response.json();
+        console.error("ElevenLabs API error details:", errorData);
+        
+        if (errorData.detail) {
+          if (typeof errorData.detail === 'string') {
+            errorMessage = errorData.detail;
+          } else if (errorData.detail.message) {
+            errorMessage = errorData.detail.message;
+          }
+        }
+      } catch (jsonError) {
+        console.error("Could not parse error response as JSON:", jsonError);
+      }
+      
+      throw new Error(`Voice cloning failed: ${errorMessage}`);
     }
     
     const data = await response.json();
-    console.log("Voice cloning response:", data);
+    console.log("Voice cloning successful:", data);
+    
+    if (!data.voice_id) {
+      throw new Error("Invalid response: missing voice_id");
+    }
     
     return {
       voiceId: data.voice_id,
       name: name,
     };
   } catch (error) {
-    console.error("Error cloning voice:", error);
-    throw new Error(`Failed to clone voice: ${error instanceof Error ? error.message : String(error)}`);
+    console.error("Voice cloning error:", error);
+    
+    if (error instanceof Error) {
+      throw new Error(`Failed to clone voice: ${error.message}`);
+    } else {
+      throw new Error(`Failed to clone voice: ${String(error)}`);
+    }
   }
 };
 
