@@ -1,3 +1,4 @@
+
 // ElevenLabs API integration for voice cloning and synthesis with real-time avatars
 
 interface VoiceCloneResponse {
@@ -14,8 +15,8 @@ interface AvatarVideoResponse {
   audioUrl: string;
 }
 
-// Updated API keys
-const ELEVENLABS_VOICE_API_KEY = "sk_307e4c5c2038de5a11bd22e9dc71959fe0af3d34982112b9";
+// Updated API keys - using user's provided key
+const ELEVENLABS_VOICE_API_KEY = "ak-6ab1e48ed1e248b6b9769c10aba23ade";
 const ELEVENLABS_VIDEO_API_KEY = "0ac1eced-ba7c-4e6e-8480-f85d32734b3c";
 
 // Valid ElevenLabs voice IDs - fallback voices
@@ -58,6 +59,7 @@ export const cloneVoice = async (
 ): Promise<VoiceCloneResponse> => {
   try {
     console.log(`Starting voice cloning process for: ${name}`);
+    console.log(`Using API key: ${apiKey.substring(0, 8)}...`);
     console.log(`Audio file size: ${audioFile.size} bytes`);
     console.log(`Audio file type: ${audioFile.type}`);
     
@@ -74,9 +76,15 @@ export const cloneVoice = async (
     const formData = new FormData();
     formData.append('name', name.trim());
     formData.append('description', `Voice cloned from ${name} - Created by Echoes`);
-    formData.append('files', audioFile, audioFile.name || 'voice_sample.wav');
+    
+    // Ensure proper file handling
+    const fileToUpload = new File([audioFile], audioFile.name || 'voice_sample.wav', {
+      type: audioFile.type || 'audio/wav'
+    });
+    formData.append('files', fileToUpload);
     
     console.log(`Making request to ElevenLabs API...`);
+    console.log(`Request URL: https://api.elevenlabs.io/v1/voices/add`);
     
     const response = await fetch('https://api.elevenlabs.io/v1/voices/add', {
       method: 'POST',
@@ -87,6 +95,7 @@ export const cloneVoice = async (
     });
     
     console.log(`API Response status: ${response.status}`);
+    console.log(`API Response headers:`, Object.fromEntries(response.headers.entries()));
     
     if (!response.ok) {
       let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
@@ -98,12 +107,18 @@ export const cloneVoice = async (
         if (errorData.detail) {
           if (typeof errorData.detail === 'string') {
             errorMessage = errorData.detail;
+          } else if (Array.isArray(errorData.detail)) {
+            errorMessage = errorData.detail.map((item: any) => item.msg || item.message || String(item)).join(', ');
           } else if (errorData.detail.message) {
             errorMessage = errorData.detail.message;
           }
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
         }
       } catch (jsonError) {
         console.error("Could not parse error response as JSON:", jsonError);
+        const errorText = await response.text().catch(() => 'Unknown error');
+        console.error("Raw error response:", errorText);
       }
       
       throw new Error(`Voice cloning failed: ${errorMessage}`);

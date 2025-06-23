@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,8 +25,8 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
   const mediaRecorderRef = React.useRef<MediaRecorder | null>(null);
   const audioChunksRef = React.useRef<Blob[]>([]);
   
-  // Default API key (users can override)
-  const defaultApiKey = "sk_307e4c5c2038de5a11bd22e9dc71959fe0af3d34982112b9";
+  // Updated default API key
+  const defaultApiKey = "ak-6ab1e48ed1e248b6b9769c10aba23ade";
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
@@ -40,8 +39,8 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
       }
       
       // Check if it's an audio file
-      if (!file.type.startsWith('audio/') && !file.name.toLowerCase().match(/\.(mp3|wav|m4a|flac|ogg)$/)) {
-        toast.error("Please select a valid audio file (MP3, WAV, M4A, FLAC, or OGG)");
+      if (!file.type.startsWith('audio/') && !file.name.toLowerCase().match(/\.(mp3|wav|m4a|flac|ogg|webm)$/)) {
+        toast.error("Please select a valid audio file (MP3, WAV, M4A, FLAC, OGG, or WEBM)");
         return;
       }
       
@@ -69,9 +68,19 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
         } 
       });
       
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
-      });
+      // Try different MIME types for better compatibility
+      let mimeType = 'audio/webm;codecs=opus';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'audio/webm';
+      }
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'audio/mp4';
+      }
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = '';
+      }
+      
+      const mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
@@ -83,19 +92,22 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
       };
       
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const file = new File([audioBlob], "recording.webm", { type: 'audio/webm' });
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType || 'audio/webm' });
+        const file = new File([audioBlob], "recording.webm", { type: mimeType || 'audio/webm' });
         setAudioFile(file);
         setAudioPreview(URL.createObjectURL(audioBlob));
         console.log(`Recording completed. Size: ${audioBlob.size} bytes`);
+        
+        // Stop all tracks
+        stream.getTracks().forEach(track => track.stop());
       };
       
       mediaRecorder.start(1000); // Collect data every second
       setIsRecording(true);
-      toast.info("Recording started... Speak clearly for at least 30 seconds");
+      toast.info("Recording started... Speak clearly for at least 30 seconds for best results");
     } catch (error) {
       console.error("Error accessing microphone:", error);
-      toast.error("Could not access microphone. Please check permissions.");
+      toast.error("Could not access microphone. Please check permissions and try again.");
     }
   };
 
@@ -103,9 +115,6 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      
-      // Stop all audio tracks
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
       toast.success("Recording completed");
     }
   };
@@ -126,6 +135,12 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
       return;
     }
     
+    // Validate audio file size again
+    if (audioFile.size < 1000) { // Less than 1KB is probably too small
+      toast.error("Audio file seems too small. Please record or upload a longer sample.");
+      return;
+    }
+    
     const keyToUse = apiKey.trim() || defaultApiKey;
     
     setIsCloning(true);
@@ -138,12 +153,14 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
           clearInterval(progressInterval);
           return 90;
         }
-        return prev + 10;
+        return prev + 15;
       });
-    }, 500);
+    }, 1000);
     
     try {
       console.log("Starting voice cloning process...");
+      console.log(`File details: ${audioFile.name}, ${audioFile.size} bytes, ${audioFile.type}`);
+      
       const result = await cloneVoice(voiceName.trim(), audioFile, keyToUse);
       
       clearInterval(progressInterval);
@@ -169,10 +186,14 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
       const errorMessage = error instanceof Error ? error.message : String(error);
       toast.error(`Voice cloning failed: ${errorMessage}`);
       
-      // Show API key input if it seems like an authentication issue
-      if (errorMessage.includes('401') || errorMessage.includes('unauthorized') || errorMessage.includes('api key')) {
+      // Show more specific error guidance
+      if (errorMessage.includes('401') || errorMessage.includes('unauthorized')) {
+        toast.error("API key is invalid. Please check your ElevenLabs API key.");
         setShowApiKeyInput(true);
-        toast.info("Please check your ElevenLabs API key");
+      } else if (errorMessage.includes('quota') || errorMessage.includes('limit')) {
+        toast.error("API quota exceeded. Please check your ElevenLabs account.");
+      } else if (errorMessage.includes('file') || errorMessage.includes('audio')) {
+        toast.error("Audio file issue. Try a different format or re-record.");
       }
     } finally {
       setIsCloning(false);
@@ -235,7 +256,7 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
                 <Input 
                   id="audio-upload" 
                   type="file" 
-                  accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg" 
+                  accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.webm" 
                   className="hidden" 
                   onChange={handleFileChange} 
                   disabled={isCloning || isRecording}
@@ -273,7 +294,7 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
             <Label>Cloning Progress</Label>
             <Progress value={progress} className="h-2" />
             <p className="text-sm text-muted-foreground text-center">
-              {progress === 100 ? "Complete!" : "Processing voice sample... This may take a minute."}
+              {progress === 100 ? "Complete!" : "Processing voice sample... This may take up to 2 minutes."}
             </p>
           </div>
         )}
