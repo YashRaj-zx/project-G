@@ -19,6 +19,38 @@ interface AvatarVideoResponse {
 const ELEVENLABS_VOICE_API_KEY = "sk_307e4c5c2038de5a11bd22e9dc71959fe0af3d34982112b9";
 const ELEVENLABS_VIDEO_API_KEY = "0ac1eced-ba7c-4e6e-8480-f85d32734b3c";
 
+// Valid ElevenLabs voice IDs - fallback voices
+const DEFAULT_VOICES = {
+  'sarah': 'EXAVITQu4vr4xnSDxMaL',
+  'roger': 'CwhRBWXzGAHq8TQ4Fs17',
+  'charlie': 'IKne3meq5aSn9XLyUdCD',
+  'george': 'JBFqnCBsd6RMkjVDRZzb',
+  'aria': '9BWtsMINqrJLrRacOk9x',
+  'laura': 'FGY2WhTYpPnrIDTdsKH5',
+};
+
+// Function to validate and get a proper voice ID
+const getValidVoiceId = (voiceId: string): string => {
+  console.log(`Validating voice ID: ${voiceId}`);
+  
+  // If it's already a valid ElevenLabs voice ID format (26 characters alphanumeric)
+  if (voiceId && voiceId.length === 20 && /^[a-zA-Z0-9]+$/.test(voiceId)) {
+    console.log(`Using provided voice ID: ${voiceId}`);
+    return voiceId;
+  }
+  
+  // Check if it matches any of our default voice names
+  const lowerVoiceId = voiceId?.toLowerCase();
+  if (lowerVoiceId && DEFAULT_VOICES[lowerVoiceId as keyof typeof DEFAULT_VOICES]) {
+    console.log(`Using mapped voice: ${lowerVoiceId} -> ${DEFAULT_VOICES[lowerVoiceId as keyof typeof DEFAULT_VOICES]}`);
+    return DEFAULT_VOICES[lowerVoiceId as keyof typeof DEFAULT_VOICES];
+  }
+  
+  // Default fallback to Sarah's voice
+  console.log(`Using default fallback voice: Sarah`);
+  return DEFAULT_VOICES.sarah;
+};
+
 // Function to clone a voice using ElevenLabs API
 export const cloneVoice = async (
   name: string,
@@ -67,10 +99,11 @@ export const textToSpeech = async (
   apiKey: string = ELEVENLABS_VOICE_API_KEY
 ): Promise<TextToSpeechResponse> => {
   try {
-    console.log(`Converting text to speech using voice ID: ${voiceId}`);
+    const validVoiceId = getValidVoiceId(voiceId);
+    console.log(`Converting text to speech using voice ID: ${validVoiceId}`);
     console.log(`Text to synthesize: "${text}"`);
     
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${validVoiceId}`, {
       method: 'POST',
       headers: {
         'xi-api-key': apiKey,
@@ -118,7 +151,7 @@ export const generateTalkingAvatar = async (
       - Voice ID: ${voiceId}
       - Image URL: ${imageUrl}`);
 
-    // First, generate the audio
+    // First, generate the audio with proper voice validation
     const audioResponse = await textToSpeech(text, voiceId);
     
     // For real-time avatar generation, we'll use a placeholder implementation

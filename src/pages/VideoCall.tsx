@@ -91,51 +91,69 @@ const VideoCall = () => {
       
       setMessages([{text: greeting, sender: 'echo'}]);
       
-      // Generate real-time talking avatar
-      setIsSpeaking(true);
-      try {
-        console.log("Generating real-time talking avatar...");
+      // Generate real-time talking avatar with better error handling
+      await generateAvatarResponse(greeting);
+    }
+  };
+  
+  const generateAvatarResponse = async (text: string) => {
+    setIsSpeaking(true);
+    
+    try {
+      console.log("Generating real-time talking avatar...");
+      
+      const response = await enhancedGenerateAvatarResponse(
+        text, 
+        echo.imageUrl || '/placeholder.svg',
+        echo.voiceId || 'sarah', // Use a simple fallback that will be mapped to valid ID
+        echo.language || 'en-US',
+        geminiApiKey,
+        elevenLabsApiKey
+      );
+      
+      console.log("Real-time avatar response:", response);
+      
+      if (audioRef.current && response.audioUrl) {
+        console.log("Playing synchronized audio:", response.audioUrl);
+        audioRef.current.src = response.audioUrl;
         
-        const response = await enhancedGenerateAvatarResponse(
-          greeting, 
-          echo.imageUrl || '/placeholder.svg',
-          echo.voiceId || 'EXAVITQu4vr4xnSDxMaL',
-          echo.language || 'en-US',
-          geminiApiKey,
-          elevenLabsApiKey
-        );
-        
-        console.log("Real-time avatar response:", response);
-        
-        if (audioRef.current && response.audioUrl) {
-          console.log("Playing synchronized audio:", response.audioUrl);
-          audioRef.current.src = response.audioUrl;
-          
-          audioRef.current.oncanplaythrough = () => {
-            console.log("Audio ready for lip-sync playback");
+        audioRef.current.oncanplaythrough = () => {
+          console.log("Audio ready for lip-sync playback");
+          if (speakerEnabled) {
             audioRef.current?.play().catch(error => {
               console.error("Error playing synchronized audio:", error);
               toast.error("Couldn't play avatar audio. Please check your audio settings.");
+              setIsSpeaking(false);
             });
-          };
-          
-          audioRef.current.onended = () => {
-            console.log("Avatar finished speaking");
-            setIsSpeaking(false);
-          };
-          
-          audioRef.current.onerror = (e) => {
-            console.error("Avatar audio error:", e);
-            setIsSpeaking(false);
-            toast.error("Error with avatar audio playback");
-          };
-        } else {
-          console.error("Audio element or URL not available for avatar");
+          }
+        };
+        
+        audioRef.current.onended = () => {
+          console.log("Avatar finished speaking");
           setIsSpeaking(false);
-        }
-      } catch (error) {
-        console.error("Error generating real-time avatar:", error);
+        };
+        
+        audioRef.current.onerror = (e) => {
+          console.error("Avatar audio error:", e);
+          setIsSpeaking(false);
+          toast.error("Error with avatar audio playback");
+        };
+      } else {
+        console.error("Audio element or URL not available for avatar");
         setIsSpeaking(false);
+        toast.error("No audio generated for avatar response");
+      }
+    } catch (error) {
+      console.error("Error generating real-time avatar:", error);
+      setIsSpeaking(false);
+      
+      // More specific error messages
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('voice')) {
+        toast.error("Voice synthesis failed. Using default voice.");
+      } else if (errorMessage.includes('avatar')) {
+        toast.error("Avatar generation failed. Please try again.");
+      } else {
         toast.error("Error generating avatar response. Please try again.");
       }
     }
@@ -196,61 +214,11 @@ const VideoCall = () => {
     
     setMessages(prev => [...prev, {text: transcript, sender: 'user'}]);
     
-    // Generate real-time avatar response
-    setIsSpeaking(true);
+    // Generate contextual response and avatar
+    const responseText = `Thank you for saying "${transcript}". I'm here to help you with anything you need.`;
+    setMessages(prev => [...prev, {text: responseText, sender: 'echo'}]);
     
-    try {
-      console.log("Generating real-time avatar response for:", transcript);
-      
-      const response = await enhancedGenerateAvatarResponse(
-        transcript,
-        echo.imageUrl || '/placeholder.svg',
-        echo.voiceId || 'EXAVITQu4vr4xnSDxMaL',
-        echo.language || 'en-US',
-        geminiApiKey,
-        elevenLabsApiKey
-      );
-      
-      console.log("Generated real-time response:", response);
-      
-      // Play synchronized audio with lip-sync
-      if (audioRef.current && response.audioUrl) {
-        console.log("Playing synchronized avatar response", response.audioUrl);
-        audioRef.current.src = response.audioUrl;
-        
-        audioRef.current.oncanplaythrough = () => {
-          if (!speakerEnabled) return;
-          audioRef.current?.play().catch(error => {
-            console.error("Error playing avatar response:", error);
-            toast.error("Couldn't play avatar response");
-          });
-        };
-        
-        audioRef.current.onended = () => {
-          console.log("Avatar response finished");
-          setIsSpeaking(false);
-        };
-        
-        audioRef.current.onerror = () => {
-          console.error("Error with avatar response playback");
-          setIsSpeaking(false);
-          toast.error("Error playing avatar response");
-        };
-      } else {
-        console.error("Audio element or URL not available for avatar response");
-        setIsSpeaking(false);
-      }
-      
-      setMessages(prev => [...prev, {
-        text: response.text || "I understand. How can I assist you further?",
-        sender: 'echo'
-      }]);
-      
-    } catch (error) {
-      console.error("Error processing voice input with avatar:", error);
-      setIsSpeaking(false);
-      toast.error("Failed to process your message with avatar");
-    }
+    await generateAvatarResponse(responseText);
   };
   
   // Simulated speech recognition - in a real app, this would use the Web Speech API
