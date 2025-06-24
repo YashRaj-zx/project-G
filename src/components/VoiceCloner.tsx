@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cloneVoice } from "@/utils/elevenLabsApi";
-import { Mic, Upload, AlertCircle, CheckCircle } from "lucide-react";
+import { Mic, Upload, AlertCircle, CheckCircle, Key } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -26,7 +26,7 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
   const mediaRecorderRef = React.useRef<MediaRecorder | null>(null);
   const audioChunksRef = React.useRef<Blob[]>([]);
   
-  // Using the provided API key
+  // Embedded API key as requested
   const defaultApiKey = "ak-6ab1e48ed1e248b6b9769c10aba23ade";
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -171,7 +171,9 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
     }
     
     const keyToUse = apiKey.trim() || defaultApiKey;
-    console.log(`Using API key: ${keyToUse.substring(0, 8)}...`);
+    console.log(`Using API key: ${keyToUse}`);
+    console.log(`Voice name: ${voiceName.trim()}`);
+    console.log(`Audio file size: ${audioFile.size} bytes`);
     
     setIsCloning(true);
     setProgress(0);
@@ -220,13 +222,22 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error("Voice cloning failed:", errorMessage);
       
-      setLastError(errorMessage);
-      toast.error(`Voice cloning failed: ${errorMessage}`);
-      
-      // Show specific guidance based on error type
+      // More specific error handling
+      let userFriendlyError = errorMessage;
       if (errorMessage.includes('401') || errorMessage.includes('Invalid API key')) {
+        userFriendlyError = "The API key is invalid or doesn't have voice cloning permissions. Please check your ElevenLabs account and ensure the API key has the correct permissions.";
         setShowApiKeyInput(true);
+      } else if (errorMessage.includes('429')) {
+        userFriendlyError = "Rate limit exceeded. Please wait a few minutes before trying again.";
+      } else if (errorMessage.includes('400')) {
+        userFriendlyError = "Bad request - please check your audio file format and voice name.";
+      } else if (errorMessage.includes('403')) {
+        userFriendlyError = "Access forbidden - your API key may not have voice cloning permissions enabled.";
       }
+      
+      setLastError(userFriendlyError);
+      toast.error(`Voice cloning failed: ${userFriendlyError}`);
+      
     } finally {
       setIsCloning(false);
     }
@@ -244,10 +255,44 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* API Key Status Alert */}
+        <Alert className="border-blue-200 bg-blue-50">
+          <Key className="h-4 w-4" />
+          <AlertDescription>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">
+                Using embedded API key: {defaultApiKey.substring(0, 8)}...
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowApiKeyInput(!showApiKeyInput)}
+                className="text-xs"
+              >
+                {showApiKeyInput ? "Hide" : "Use different key"}
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+
         {lastError && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{lastError}</AlertDescription>
+            <AlertDescription>
+              <div className="space-y-2">
+                <p>{lastError}</p>
+                {lastError.includes('Invalid API key') && (
+                  <div className="text-xs space-y-1">
+                    <p><strong>Troubleshooting steps:</strong></p>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li>Verify the API key in your ElevenLabs account</li>
+                      <li>Ensure voice cloning is enabled in your subscription</li>
+                      <li>Check that the API key has the correct permissions</li>
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </AlertDescription>
           </Alert>
         )}
 
@@ -256,7 +301,7 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               <div className="space-y-2 mt-2">
-                <Label htmlFor="api-key">ElevenLabs API Key</Label>
+                <Label htmlFor="api-key">Custom ElevenLabs API Key</Label>
                 <Input
                   id="api-key"
                   type="password"
@@ -271,6 +316,7 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
             </AlertDescription>
           </Alert>
         )}
+        
         
         <div className="space-y-2">
           <Label htmlFor="voice-name">Voice Name *</Label>
@@ -348,17 +394,6 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
         >
           {isCloning ? "Cloning Voice..." : "Clone Voice"}
         </Button>
-        
-        {!showApiKeyInput && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowApiKeyInput(true)}
-            className="w-full text-xs text-muted-foreground"
-          >
-            Use custom API key
-          </Button>
-        )}
       </CardContent>
     </Card>
   );
