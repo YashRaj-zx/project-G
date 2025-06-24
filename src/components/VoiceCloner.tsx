@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cloneVoice } from "@/utils/elevenLabsApi";
-import { Mic, Upload, AlertCircle } from "lucide-react";
+import { Mic, Upload, AlertCircle, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -22,38 +22,63 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
   const [audioPreview, setAudioPreview] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState<string>("");
   const [showApiKeyInput, setShowApiKeyInput] = useState<boolean>(false);
+  const [lastError, setLastError] = useState<string>("");
   const mediaRecorderRef = React.useRef<MediaRecorder | null>(null);
   const audioChunksRef = React.useRef<Blob[]>([]);
   
-  // Updated default API key
+  // Using the provided API key
   const defaultApiKey = "ak-6ab1e48ed1e248b6b9769c10aba23ade";
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
+    setLastError("");
+    
     if (file) {
-      console.log(`Selected file: ${file.name}, size: ${file.size}, type: ${file.type}`);
+      console.log(`File selected: ${file.name}`);
+      console.log(`File size: ${file.size} bytes`);
+      console.log(`File type: ${file.type}`);
       
-      if (file.size > 25 * 1024 * 1024) { // 25MB limit
-        toast.error("Audio file must be less than 25MB");
+      // Validate file size
+      if (file.size > 25 * 1024 * 1024) {
+        const error = "Audio file must be less than 25MB";
+        toast.error(error);
+        setLastError(error);
         return;
       }
       
-      // Check if it's an audio file
-      if (!file.type.startsWith('audio/') && !file.name.toLowerCase().match(/\.(mp3|wav|m4a|flac|ogg|webm)$/)) {
-        toast.error("Please select a valid audio file (MP3, WAV, M4A, FLAC, OGG, or WEBM)");
+      if (file.size < 10000) { // Less than 10KB is probably too small
+        const error = "Audio file seems too small. Please upload a longer recording.";
+        toast.error(error);
+        setLastError(error);
+        return;
+      }
+      
+      // Validate file type
+      const validExtensions = ['.mp3', '.wav', '.m4a', '.flac', '.ogg', '.webm'];
+      const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+      const isValidAudio = file.type.startsWith('audio/') || validExtensions.includes(fileExtension);
+      
+      if (!isValidAudio) {
+        const error = "Please select a valid audio file (MP3, WAV, M4A, FLAC, OGG, or WEBM)";
+        toast.error(error);
+        setLastError(error);
         return;
       }
       
       setAudioFile(file);
       setAudioPreview(URL.createObjectURL(file));
       
-      // Extract name from filename as default
-      if (!voiceName) {
-        const nameFromFile = file.name.split('.')[0].replace(/[^a-zA-Z0-9\s]/g, '').trim();
+      // Auto-generate voice name from filename if not set
+      if (!voiceName.trim()) {
+        const nameFromFile = file.name
+          .split('.')[0]
+          .replace(/[^a-zA-Z0-9\s]/g, '')
+          .trim()
+          .substring(0, 50);
         setVoiceName(nameFromFile);
       }
       
-      toast.success("Audio file loaded successfully");
+      toast.success("Audio file loaded successfully!");
     }
   };
 
@@ -120,46 +145,50 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
   };
 
   const handleClone = async () => {
+    console.log("=== STARTING VOICE CLONE PROCESS ===");
+    setLastError("");
+    
+    // Validation
     if (!audioFile) {
-      toast.error("Please upload or record an audio sample");
+      const error = "Please upload or record an audio sample";
+      toast.error(error);
+      setLastError(error);
       return;
     }
     
     if (!voiceName.trim()) {
-      toast.error("Please enter a name for the cloned voice");
+      const error = "Please enter a name for the cloned voice";
+      toast.error(error);
+      setLastError(error);
       return;
     }
     
-    if (voiceName.trim().length < 2) {
-      toast.error("Voice name must be at least 2 characters long");
-      return;
-    }
-    
-    // Validate audio file size again
-    if (audioFile.size < 1000) { // Less than 1KB is probably too small
-      toast.error("Audio file seems too small. Please record or upload a longer sample.");
+    if (voiceName.trim().length < 2 || voiceName.trim().length > 50) {
+      const error = "Voice name must be between 2 and 50 characters";
+      toast.error(error);
+      setLastError(error);
       return;
     }
     
     const keyToUse = apiKey.trim() || defaultApiKey;
+    console.log(`Using API key: ${keyToUse.substring(0, 8)}...`);
     
     setIsCloning(true);
     setProgress(0);
     
-    // Simulate progress
+    // Progress simulation
     const progressInterval = setInterval(() => {
       setProgress(prev => {
-        if (prev >= 90) {
+        if (prev >= 85) {
           clearInterval(progressInterval);
-          return 90;
+          return 85;
         }
-        return prev + 15;
+        return prev + 10;
       });
-    }, 1000);
+    }, 800);
     
     try {
-      console.log("Starting voice cloning process...");
-      console.log(`File details: ${audioFile.name}, ${audioFile.size} bytes, ${audioFile.type}`);
+      console.log("Calling cloneVoice function...");
       
       const result = await cloneVoice(voiceName.trim(), audioFile, keyToUse);
       
@@ -168,32 +197,35 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
       
       console.log("Voice cloning successful:", result);
       
-      // Call the callback with the cloned voice ID and name
+      // Success notification
+      toast.success(`🎉 Voice "${result.name}" cloned successfully!`, {
+        description: "You can now use this voice in calls",
+        duration: 5000,
+      });
+      
+      // Call the callback
       onVoiceCloned(result.voiceId, result.name);
       
-      toast.success(`Voice "${result.name}" cloned successfully! You can now use this voice in calls.`);
-      
-      // Reset the form
+      // Reset form
       setAudioFile(null);
       setVoiceName("");
       setAudioPreview(null);
       setProgress(0);
+      setLastError("");
+      
     } catch (error) {
       clearInterval(progressInterval);
       setProgress(0);
-      console.error("Voice cloning failed:", error);
       
       const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error("Voice cloning failed:", errorMessage);
+      
+      setLastError(errorMessage);
       toast.error(`Voice cloning failed: ${errorMessage}`);
       
-      // Show more specific error guidance
-      if (errorMessage.includes('401') || errorMessage.includes('unauthorized')) {
-        toast.error("API key is invalid. Please check your ElevenLabs API key.");
+      // Show specific guidance based on error type
+      if (errorMessage.includes('401') || errorMessage.includes('Invalid API key')) {
         setShowApiKeyInput(true);
-      } else if (errorMessage.includes('quota') || errorMessage.includes('limit')) {
-        toast.error("API quota exceeded. Please check your ElevenLabs account.");
-      } else if (errorMessage.includes('file') || errorMessage.includes('audio')) {
-        toast.error("Audio file issue. Try a different format or re-record.");
       }
     } finally {
       setIsCloning(false);
@@ -203,19 +235,28 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
   return (
     <Card className="border-echoes-purple/20">
       <CardHeader>
-        <CardTitle>Voice Cloning</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          Voice Cloning
+          {audioFile && !lastError && <CheckCircle className="h-5 w-5 text-green-500" />}
+        </CardTitle>
         <CardDescription>
-          Create a voice clone by uploading an audio sample or recording directly. 
-          For best results, use clear audio with at least 30 seconds of speech.
+          Create a voice clone by uploading an audio sample. For best results, use clear audio with at least 30 seconds of speech.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {lastError && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{lastError}</AlertDescription>
+          </Alert>
+        )}
+
         {showApiKeyInput && (
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               <div className="space-y-2 mt-2">
-                <Label htmlFor="api-key">ElevenLabs API Key (Optional)</Label>
+                <Label htmlFor="api-key">ElevenLabs API Key</Label>
                 <Input
                   id="api-key"
                   type="password"
@@ -224,7 +265,7 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
                   onChange={(e) => setApiKey(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  If using your own API key, make sure it has voice cloning permissions.
+                  Make sure your API key has voice cloning permissions enabled.
                 </p>
               </div>
             </AlertDescription>
@@ -232,13 +273,14 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
         )}
         
         <div className="space-y-2">
-          <Label htmlFor="voice-name">Voice Name</Label>
+          <Label htmlFor="voice-name">Voice Name *</Label>
           <Input 
             id="voice-name"
             placeholder="Enter a name for this voice (e.g., John, Sarah)"
             value={voiceName}
             onChange={(e) => setVoiceName(e.target.value)}
             maxLength={50}
+            className={lastError && !voiceName.trim() ? "border-red-500" : ""}
           />
         </div>
         

@@ -58,90 +58,151 @@ export const cloneVoice = async (
   apiKey: string = ELEVENLABS_VOICE_API_KEY
 ): Promise<VoiceCloneResponse> => {
   try {
-    console.log(`Starting voice cloning process for: ${name}`);
-    console.log(`Using API key: ${apiKey.substring(0, 8)}...`);
-    console.log(`Audio file size: ${audioFile.size} bytes`);
-    console.log(`Audio file type: ${audioFile.type}`);
+    console.log(`=== VOICE CLONING STARTED ===`);
+    console.log(`Voice name: ${name}`);
+    console.log(`API key: ${apiKey}`);
+    console.log(`File name: ${audioFile.name}`);
+    console.log(`File size: ${audioFile.size} bytes`);
+    console.log(`File type: ${audioFile.type}`);
     
-    // Validate audio file
+    // Validate inputs
+    if (!name || name.trim().length === 0) {
+      throw new Error("Voice name is required");
+    }
+    
+    if (!audioFile) {
+      throw new Error("Audio file is required");
+    }
+    
+    if (!apiKey || apiKey.trim().length === 0) {
+      throw new Error("API key is required");
+    }
+    
+    // Validate audio file size (ElevenLabs limit is 25MB)
     if (audioFile.size === 0) {
       throw new Error("Audio file is empty");
     }
     
-    if (audioFile.size > 25 * 1024 * 1024) { // 25MB limit
+    if (audioFile.size > 25 * 1024 * 1024) {
       throw new Error("Audio file is too large. Maximum size is 25MB");
     }
     
-    // Create FormData properly
+    // Validate file is actually audio
+    const validExtensions = ['.mp3', '.wav', '.m4a', '.flac', '.ogg', '.webm'];
+    const fileExtension = audioFile.name.toLowerCase().substring(audioFile.name.lastIndexOf('.'));
+    const isValidAudio = audioFile.type.startsWith('audio/') || validExtensions.includes(fileExtension);
+    
+    if (!isValidAudio) {
+      throw new Error("Please upload a valid audio file (MP3, WAV, M4A, FLAC, OGG, or WEBM)");
+    }
+    
+    console.log(`Creating FormData...`);
+    
+    // Create FormData with proper structure for ElevenLabs API
     const formData = new FormData();
+    
+    // Add voice name and description
     formData.append('name', name.trim());
-    formData.append('description', `Voice cloned from ${name} - Created by Echoes`);
+    formData.append('description', `Voice cloned from ${name.trim()} using Echoes AI`);
     
-    // Ensure proper file handling
-    const fileToUpload = new File([audioFile], audioFile.name || 'voice_sample.wav', {
-      type: audioFile.type || 'audio/wav'
-    });
-    formData.append('files', fileToUpload);
+    // Add the audio file - ElevenLabs expects 'files' (plural)
+    formData.append('files', audioFile, audioFile.name);
     
-    console.log(`Making request to ElevenLabs API...`);
-    console.log(`Request URL: https://api.elevenlabs.io/v1/voices/add`);
+    // Add labels (optional but recommended)
+    formData.append('labels', JSON.stringify({}));
+    
+    console.log(`Making API request to ElevenLabs...`);
+    console.log(`URL: https://api.elevenlabs.io/v1/voices/add`);
     
     const response = await fetch('https://api.elevenlabs.io/v1/voices/add', {
       method: 'POST',
       headers: {
-        'xi-api-key': apiKey,
+        'xi-api-key': apiKey.trim(),
+        // Do NOT set Content-Type when using FormData - let browser set it with boundary
       },
       body: formData,
     });
     
     console.log(`API Response status: ${response.status}`);
-    console.log(`API Response headers:`, Object.fromEntries(response.headers.entries()));
+    console.log(`API Response status text: ${response.statusText}`);
+    
+    // Get response text first to log it
+    const responseText = await response.text();
+    console.log(`Raw API response:`, responseText);
     
     if (!response.ok) {
       let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
       
       try {
-        const errorData = await response.json();
+        const errorData = JSON.parse(responseText);
         console.error("ElevenLabs API error details:", errorData);
         
+        // Handle different error response formats
         if (errorData.detail) {
           if (typeof errorData.detail === 'string') {
             errorMessage = errorData.detail;
           } else if (Array.isArray(errorData.detail)) {
-            errorMessage = errorData.detail.map((item: any) => item.msg || item.message || String(item)).join(', ');
+            errorMessage = errorData.detail.map((item: any) => {
+              if (typeof item === 'string') return item;
+              return item.msg || item.message || JSON.stringify(item);
+            }).join(', ');
           } else if (errorData.detail.message) {
             errorMessage = errorData.detail.message;
           }
         } else if (errorData.message) {
           errorMessage = errorData.message;
+        } else if (errorData.error) {
+          errorMessage = errorData.error;
         }
+        
+        // Specific error handling
+        if (response.status === 401) {
+          errorMessage = "Invalid API key. Please check your ElevenLabs API key.";
+        } else if (response.status === 429) {
+          errorMessage = "Rate limit exceeded. Please try again later.";
+        } else if (response.status === 400) {
+          errorMessage = `Bad request: ${errorMessage}`;
+        }
+        
       } catch (jsonError) {
         console.error("Could not parse error response as JSON:", jsonError);
-        const errorText = await response.text().catch(() => 'Unknown error');
-        console.error("Raw error response:", errorText);
+        errorMessage = `HTTP ${response.status}: ${responseText || response.statusText}`;
       }
       
-      throw new Error(`Voice cloning failed: ${errorMessage}`);
+      throw new Error(errorMessage);
     }
     
-    const data = await response.json();
+    // Parse successful response
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error("Could not parse success response as JSON:", parseError);
+      throw new Error("Invalid response format from ElevenLabs API");
+    }
+    
     console.log("Voice cloning successful:", data);
     
     if (!data.voice_id) {
-      throw new Error("Invalid response: missing voice_id");
+      throw new Error("Invalid response: missing voice_id in response");
     }
+    
+    console.log(`=== VOICE CLONING COMPLETED ===`);
+    console.log(`New voice ID: ${data.voice_id}`);
     
     return {
       voiceId: data.voice_id,
-      name: name,
+      name: name.trim(),
     };
+    
   } catch (error) {
-    console.error("Voice cloning error:", error);
+    console.error("=== VOICE CLONING FAILED ===");
+    console.error("Error details:", error);
     
     if (error instanceof Error) {
-      throw new Error(`Failed to clone voice: ${error.message}`);
+      throw error; // Re-throw the original error with its message
     } else {
-      throw new Error(`Failed to clone voice: ${String(error)}`);
+      throw new Error(`Voice cloning failed: ${String(error)}`);
     }
   }
 };
