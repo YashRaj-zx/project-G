@@ -95,11 +95,13 @@ export const cloneVoice = async (
       throw new Error("Please upload a valid audio file (MP3, WAV, M4A, FLAC, OGG, or WEBM)");
     }
     
-    console.log(`Creating FormData for HyperVoice API...`);
+    console.log(`Creating form data for HyperVoice API...`);
     
-    // Create FormData for HyperVoice API
+    // Create form data for HyperVoice API (expects application/x-www-form-urlencoded)
     const formData = new FormData();
     formData.append('name', name.trim());
+    formData.append('gen_text', 'Hello, this is a test voice cloning sample.');
+    formData.append('voice', 'custom'); // or appropriate voice parameter
     formData.append('audio_file', audioFile, audioFile.name);
     
     console.log(`Making API request to HyperVoice...`);
