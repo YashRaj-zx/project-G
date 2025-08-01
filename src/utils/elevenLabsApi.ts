@@ -101,8 +101,7 @@ export const cloneVoice = async (
     const formData = new FormData();
     formData.append('name', name.trim());
     formData.append('gen_text', 'Hello, this is a test voice cloning sample.');
-    formData.append('voice', 'custom'); // or appropriate voice parameter
-    formData.append('audio_file', audioFile, audioFile.name);
+    formData.append('voice', audioFile, audioFile.name); // API expects 'voice' field for audio file
     
     console.log(`Making API request to HyperVoice...`);
     console.log(`URL: ${HYPERVOICE_API_BASE}/voice-clone`);
