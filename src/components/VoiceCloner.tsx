@@ -261,16 +261,11 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
           <AlertDescription>
             <div className="flex items-center justify-between">
               <span className="text-sm">
-                Using embedded API key: {defaultApiKey.substring(0, 8)}...
+                Using HyperVoice API via RapidAPI
               </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowApiKeyInput(!showApiKeyInput)}
-                className="text-xs"
-              >
-                {showApiKeyInput ? "Hide" : "Use different key"}
-              </Button>
+              <span className="text-xs text-muted-foreground">
+                Embedded API key
+              </span>
             </div>
           </AlertDescription>
         </Alert>
