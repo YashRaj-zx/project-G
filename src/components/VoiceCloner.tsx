@@ -261,7 +261,7 @@ const VoiceCloner: React.FC<VoiceCloneProps> = ({ onVoiceCloned }) => {
           <AlertDescription>
             <div className="flex items-center justify-between">
               <span className="text-sm">
-                Using HyperVoice API via RapidAPI
+                Using ElevenLabs API: {defaultApiKey.substring(0, 8)}...
               </span>
               <span className="text-xs text-muted-foreground">
                 Embedded API key

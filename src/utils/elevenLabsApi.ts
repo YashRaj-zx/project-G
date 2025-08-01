@@ -51,18 +51,18 @@ export const getValidVoiceId = (voiceId: string): string => {
   return DEFAULT_VOICES.sarah;
 };
 
-// HyperVoice API integration for voice cloning
-const HYPERVOICE_API_BASE = 'https://hypervoice-tts-voice-cloning.p.rapidapi.com/api/hypervoice';
-const RAPIDAPI_KEY = '0bb79fc647msh9d7d11c2803c88ap1d489bjsnc6834f6ec4cf';
+// ElevenLabs API integration for voice cloning (restored working version)
+const ELEVENLABS_API_BASE = 'https://api.elevenlabs.io/v1';
+const ELEVENLABS_API_KEY = "ak-6ab1e48ed1e248b6b9769c10aba23ade";
 
-// Function to clone a voice using HyperVoice API
+// Function to clone a voice using ElevenLabs API (restored working version)
 export const cloneVoice = async (
   name: string,
   audioFile: File,
-  apiKey?: string // Optional, using embedded RapidAPI key
+  apiKey: string = ELEVENLABS_API_KEY
 ): Promise<VoiceCloneResponse> => {
   try {
-    console.log(`=== HYPERVOICE CLONING STARTED ===`);
+    console.log(`=== ELEVENLABS CLONING STARTED ===`);
     console.log(`Voice name: ${name}`);
     console.log(`File name: ${audioFile.name}`);
     console.log(`File size: ${audioFile.size} bytes`);
@@ -77,13 +77,13 @@ export const cloneVoice = async (
       throw new Error("Audio file is required");
     }
     
-    // Validate audio file size
+    // Validate audio file size (ElevenLabs limit is 25MB)
     if (audioFile.size === 0) {
       throw new Error("Audio file is empty");
     }
     
-    if (audioFile.size > 10 * 1024 * 1024) { // 10MB limit for HyperVoice
-      throw new Error("Audio file is too large. Maximum size is 10MB");
+    if (audioFile.size > 25 * 1024 * 1024) {
+      throw new Error("Audio file is too large. Maximum size is 25MB");
     }
     
     // Validate file is actually audio
@@ -95,22 +95,22 @@ export const cloneVoice = async (
       throw new Error("Please upload a valid audio file (MP3, WAV, M4A, FLAC, OGG, or WEBM)");
     }
     
-    console.log(`Creating form data for HyperVoice API...`);
+    console.log(`Creating FormData for ElevenLabs API...`);
     
-    // Create form data for HyperVoice API (expects application/x-www-form-urlencoded)
+    // Create FormData with proper structure for ElevenLabs API
     const formData = new FormData();
     formData.append('name', name.trim());
-    formData.append('gen_text', 'Hello, this is a test voice cloning sample.');
-    formData.append('voice', audioFile, audioFile.name); // API expects 'voice' field for audio file
+    formData.append('description', `Voice cloned from ${name.trim()} using Echoes AI`);
+    formData.append('files', audioFile, audioFile.name);
+    formData.append('labels', JSON.stringify({}));
     
-    console.log(`Making API request to HyperVoice...`);
-    console.log(`URL: ${HYPERVOICE_API_BASE}/voice-clone`);
+    console.log(`Making API request to ElevenLabs...`);
+    console.log(`URL: ${ELEVENLABS_API_BASE}/voices/add`);
     
-    const response = await fetch(`${HYPERVOICE_API_BASE}/voice-clone`, {
+    const response = await fetch(`${ELEVENLABS_API_BASE}/voices/add`, {
       method: 'POST',
       headers: {
-        'x-rapidapi-key': RAPIDAPI_KEY,
-        'x-rapidapi-host': 'hypervoice-tts-voice-cloning.p.rapidapi.com',
+        'xi-api-key': apiKey.trim(),
       },
       body: formData,
     });
@@ -127,19 +127,28 @@ export const cloneVoice = async (
       
       try {
         const errorData = JSON.parse(responseText);
-        console.error("HyperVoice API error details:", errorData);
+        console.error("ElevenLabs API error details:", errorData);
         
-        if (errorData.message) {
+        if (errorData.detail) {
+          if (typeof errorData.detail === 'string') {
+            errorMessage = errorData.detail;
+          } else if (Array.isArray(errorData.detail)) {
+            errorMessage = errorData.detail.map((item: any) => {
+              if (typeof item === 'string') return item;
+              return item.msg || item.message || JSON.stringify(item);
+            }).join(', ');
+          } else if (errorData.detail.message) {
+            errorMessage = errorData.detail.message;
+          }
+        } else if (errorData.message) {
           errorMessage = errorData.message;
         } else if (errorData.error) {
           errorMessage = errorData.error;
-        } else if (errorData.detail) {
-          errorMessage = errorData.detail;
         }
         
         // Specific error handling
         if (response.status === 401) {
-          errorMessage = "Invalid RapidAPI key or subscription expired.";
+          errorMessage = "Invalid API key. Please check your ElevenLabs API key.";
         } else if (response.status === 429) {
           errorMessage = "Rate limit exceeded. Please try again later.";
         } else if (response.status === 400) {
@@ -160,29 +169,29 @@ export const cloneVoice = async (
       data = JSON.parse(responseText);
     } catch (parseError) {
       console.error("Could not parse success response as JSON:", parseError);
-      throw new Error("Invalid response format from HyperVoice API");
+      throw new Error("Invalid response format from ElevenLabs API");
     }
     
     console.log("Voice cloning successful:", data);
     
-    // HyperVoice API response format may vary, handle different formats
-    const voiceId = data.voice_id || data.id || data.cloned_voice_id || Math.random().toString(36).substr(2, 9);
-    const voiceName = data.name || data.voice_name || name.trim();
+    if (!data.voice_id) {
+      throw new Error("Invalid response: missing voice_id in response");
+    }
     
-    console.log(`=== HYPERVOICE CLONING COMPLETED ===`);
-    console.log(`New voice ID: ${voiceId}`);
+    console.log(`=== ELEVENLABS CLONING COMPLETED ===`);
+    console.log(`New voice ID: ${data.voice_id}`);
     
     return {
-      voiceId: voiceId,
-      name: voiceName,
+      voiceId: data.voice_id,
+      name: name.trim(),
     };
     
   } catch (error) {
-    console.error("=== HYPERVOICE CLONING FAILED ===");
+    console.error("=== ELEVENLABS CLONING FAILED ===");
     console.error("Error details:", error);
     
     if (error instanceof Error) {
-      throw error; // Re-throw the original error with its message
+      throw error;
     } else {
       throw new Error(`Voice cloning failed: ${String(error)}`);
     }
