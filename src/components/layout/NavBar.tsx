@@ -101,7 +101,9 @@ const NavBar = () => {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={async () => {
- await signOut();
+                  // Ensure signOut is called correctly as a function
+                  await signOut();
+                  // Navigate after successful sign out
  navigate("/login");
  }}>Sign out</DropdownMenuItem>
               </DropdownMenuContent>
@@ -185,6 +187,8 @@ const NavBar = () => {
                 {/* Optionally add mobile user menu items here if needed */}
                 {/* For now, just showing a placeholder/close button */}
                  <Button variant="ghost" className="w-full" onClick={async () => {
+                  // Ensure signOut is called correctly as a function
+                  await signOut();
  await signOut(); navigate("/login"); setIsMenuOpen(false); }}>Sign out</Button>
              </>
             
