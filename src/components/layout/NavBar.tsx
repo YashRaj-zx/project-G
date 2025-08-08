@@ -52,6 +52,8 @@ const NavBar = () => {
             Pricing
           </Link>
 
+          {/* Conditionally render Create Echo, Dashboard, and Profile when user is logged in */}
+
           {user && (
             <Link
               to="/create-echo"
@@ -62,40 +64,37 @@ const NavBar = () => {
               } hover:text-echoes-purple transition-colors`}
             >
               Create Echo
-            </Link>
- {user && (
- <Link
- to="/dashboard"
- className={`${
- location.pathname === '/dashboard'
+            </Link>)}
+
+          {user && (
+            <Link
+              to="/dashboard"
+              className={`${
+                location.pathname === '/dashboard'
                   ? 'text-echoes-purple'
- : 'text-foreground/80'
+                  : 'text-foreground/80'
               } hover:text-echoes-purple transition-colors`}
- >Dashboard</Link>)}
- {user ? (
- <DropdownMenu>
+            >Dashboard</Link>
+          )}
+
+          {user ? (
+            <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative rounded-full h-8 w-8 p-0">
                   <Avatar>
-                    <AvatarImage src="/placeholder.svg" alt={user?.name || 'Guest'} />
+                    <AvatarImage src={user?.photoURL || '/public/ghost-icon.png'} alt={user?.name || 'Guest'} />
                     <AvatarFallback>
                       {user?.name?.charAt(0) || 'G'}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>
-                  {user?.name || 'Guest'}
-                </DropdownMenuLabel>
+              <DropdownMenuContent align="end"> 
+                <DropdownMenuLabel>{user?.name || 'Guest'}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate('/dashboard')}>
                   <UserIcon className="mr-2 h-4 w-4" />
                   Dashboard
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/create-echo')}>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Create Echo
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={async () => {
@@ -103,8 +102,8 @@ const NavBar = () => {
                   await logout();
                   // Close the mobile menu after signing out
                   setIsMenuOpen(false);
-                  // Navigate after successful sign out
- navigate("/login");
+                  // Navigate after successful sign out to the login page
+                  navigate("/login");
  }}>Sign out</DropdownMenuItem>
  </DropdownMenuContent>
             </DropdownMenu>
