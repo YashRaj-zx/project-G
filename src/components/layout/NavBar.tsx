@@ -65,15 +65,16 @@ const NavBar = () => {
             </Link>)}
           )}
  {user && (
-            <Link
-              to="/dashboard"
-              className={`${
-                location.pathname === '/dashboard'
+ <Link
+ to="/dashboard"
+ className={`${
+ location.pathname === '/dashboard'
                   ? 'text-echoes-purple'
-                  : 'text-foreground/80' 
+ : 'text-foreground/80'
               } hover:text-echoes-purple transition-colors`}
-            >Dashboard</Link>)}
-          {user && (<DropdownMenu>
+ >Dashboard</Link>)}
+ {user ? (
+ <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative rounded-full h-8 w-8 p-0">
                   <Avatar>
