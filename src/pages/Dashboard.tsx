@@ -69,8 +69,13 @@ const Dashboard = () => {
       <main className="flex-grow py-16 px-4 pt-24">
         <div className="max-w-7xl mx-auto">
           <div className="mb-10">
-            <h1 className="text-3xl font-bold text-gradient mb-2">Welcome, {user?.name || 'Guest'}</h1>
-            <p className="text-foreground/60">Manage your echoes and past conversations</p>
+            <h1 className="text-3xl font-bold text-gradient mb-1">Welcome, {user?.name || 'Guest'}</h1>
+            {user?.email && (
+              <p className="text-foreground/60 text-sm mb-2">{user.email}</p>
+            )}
+            <p className="text-foreground/60 text-base">
+              Manage your echoes and past conversations
+            </p>
           </div>
 
           <Tabs defaultValue="echoes" className="space-y-8">
