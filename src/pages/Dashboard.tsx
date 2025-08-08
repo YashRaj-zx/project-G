@@ -91,7 +91,7 @@ const Dashboard = () => {
             </TabsList>
             
             <TabsContent value="echoes">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-96">
                 <Link to="/create-echo">
                   <Card className="h-full border-dashed border-2 border-echoes-purple/30 hover:border-echoes-purple/70 transition-colors bg-echoes-light/5">
                     <CardContent className="h-64 flex flex-col items-center justify-center gap-4">
@@ -103,12 +103,12 @@ const Dashboard = () => {
                     </CardContent>
                   </Card>
                 </Link>
-                
+
                 {loading ? (
                   <Card className="h-64 flex items-center justify-center">
                     <p>Loading your echoes...</p>
                   </Card>
-                ) : echoes.length === 0 ? (
+                ) : echoes.length === 0 && !loading ? (
                   <Card className="h-64 flex items-center justify-center col-span-2">
                     <CardContent className="flex flex-col items-center justify-center text-center">
                       <p className="text-center text-muted-foreground mb-4">You haven't created any echoes yet.</p>
@@ -123,8 +123,11 @@ const Dashboard = () => {
                   echoes.map(echo => (
                     <Card key={echo.id} className="h-full">
                       <CardHeader className="pb-2">
-                        <div className="w-16 h-16 rounded-full overflow-hidden mb-2">
-                          <img src={echo.imageUrl} alt={echo.name} className="w-full h-full object-cover" />
+                        <div className="flex items-center gap-4 mb-2">
+                          <Avatar className="h-16 w-16">
+                            <AvatarImage src="/ghost-icon.png" alt={echo.name} />
+                            <AvatarFallback>{echo.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
                         </div>
                         <CardTitle>{echo.name}</CardTitle>
                         <CardDescription className="text-foreground/60">
@@ -158,12 +161,13 @@ const Dashboard = () => {
                   ))
                 )}
               </div>
+
             </TabsContent>
             
             <TabsContent value="calls">
               {loading ? (
                 <Card className="h-64 flex items-center justify-center">
-                  <p>Loading your call history...</p>
+                  <p>Loading call history...</p>
                 </Card>
               ) : calls.length === 0 ? (
                 <div className="text-center py-20 bg-echoes-light/5 rounded-lg">

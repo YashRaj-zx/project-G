@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Menu, X, User as UserIcon, Settings } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,7 +15,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from 'sonner';
 
-const NavBar = () => {
+const NavBar = () => { 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -51,26 +51,28 @@ const NavBar = () => {
           >
             Pricing
           </Link>
-          <Link 
-            to="/create-echo" 
-            className={`${
-              location.pathname === '/create-echo' 
-                ? 'text-echoes-purple' 
-                : 'text-foreground/80'
-            } hover:text-echoes-purple transition-colors`}
-          >
-            Create Echo
-          </Link>
-          <Link 
-            to="/dashboard" 
-            className={`${
-              location.pathname === '/dashboard' 
-                ? 'text-echoes-purple' 
-                : 'text-foreground/80'
-            } hover:text-echoes-purple transition-colors`}
-          >
-            Dashboard
-          </Link>
+
+          {user && (
+            <Link
+              to="/create-echo"
+              className={`${
+                location.pathname === '/create-echo'
+                  ? 'text-echoes-purple'
+                  : 'text-foreground/80'
+              } hover:text-echoes-purple transition-colors`}
+            >
+              Create Echo
+            </Link>
+          )}
+ {user && (
+            <Link
+              to="/dashboard"
+              className={`${
+                location.pathname === '/dashboard'
+                  ? 'text-echoes-purple'
+                  : 'text-foreground/80'
+              } hover:text-echoes-purple transition-colors`}
+            >Dashboard</Link>)}
 
           {user ? (
             <DropdownMenu>
@@ -97,6 +99,10 @@ const NavBar = () => {
                   <Settings className="mr-2 h-4 w-4" />
                   Create Echo
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={async () => {
+                  // Call your sign-out function here
+                  await useAuth().signOut();}}>Sign out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
@@ -150,33 +156,37 @@ const NavBar = () => {
             >
               Pricing
             </Link>
-            <Link 
-              to="/create-echo" 
-              className={`text-lg ${
-                location.pathname === '/create-echo' 
-                  ? 'text-echoes-purple' 
-                  : 'text-foreground/80'
-              } hover:text-echoes-purple transition-colors`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Create Echo
-            </Link>
-            <Link 
-              to="/dashboard" 
-              className={`text-lg ${
-                location.pathname === '/dashboard' 
-                  ? 'text-echoes-purple' 
-                  : 'text-foreground/80'
-              } hover:text-echoes-purple transition-colors`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Dashboard
-            </Link>
+
             {user ? (
-              // Render mobile user menu here if needed, or just close menu
-              <div className="w-full text-center">
-                 <Button variant="ghost" onClick={() => setIsMenuOpen(false)}>Profile (close menu)</Button>
-              </div>
+              <>
+                <Link 
+                  to="/create-echo" 
+                  className={`text-lg ${
+                    location.pathname === '/create-echo' 
+                      ? 'text-echoes-purple' 
+                      : 'text-foreground/80'
+                  } hover:text-echoes-purple transition-colors`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Create Echo
+                </Link>
+                <Link 
+                  to="/dashboard" 
+                  className={`text-lg ${
+                    location.pathname === '/dashboard' 
+                      ? 'text-echoes-purple' 
+                      : 'text-foreground/80'
+                  } hover:text-echoes-purple transition-colors`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+                {/* Optionally add mobile user menu items here if needed */}
+                {/* For now, just showing a placeholder/close button */}
+                 <Button variant="ghost" className="w-full" onClick={async () => {
+                   await useAuth().signOut(); setIsMenuOpen(false); }}>Sign out</Button>
+             </>
+            
             ) : (
               <>
                 <Link to="/login" className="text-lg" onClick={() => setIsMenuOpen(false)}>
