@@ -19,7 +19,7 @@ const NavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
 
   // We now use a simpler profile menu with just navigation options
   return (
@@ -80,7 +80,7 @@ const NavBar = () => {
                 <Button variant="ghost" className="relative rounded-full h-8 w-8 p-0">
                   <Avatar>
                     <AvatarImage src="/placeholder.svg" alt={user?.name || 'Guest'} />
-                    <AvatarFallback>
+                    <AvatarFallback src={user?.photoURL || '/public/ghost-icon.png'}>
                       {user?.name?.charAt(0) || 'G'}
                     </AvatarFallback>
                   </Avatar>
@@ -101,8 +101,10 @@ const NavBar = () => {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={async () => {
-                  // Ensure signOut is called correctly as a function
-                  await signOut();
+                  // Ensure logout is called correctly as a function and wait for it to complete
+                  await logout();
+                  // Close the mobile menu after signing out
+                  setIsMenuOpen(false);
                   // Navigate after successful sign out
  navigate("/login");
  }}>Sign out</DropdownMenuItem>
@@ -186,10 +188,13 @@ const NavBar = () => {
                 </Link>
                 {/* Optionally add mobile user menu items here if needed */}
                 {/* For now, just showing a placeholder/close button */}
-                 <Button variant="ghost" className="w-full" onClick={async () => {
-                  // Ensure signOut is called correctly as a function
-                  await signOut();
- await signOut(); navigate("/login"); setIsMenuOpen(false); }}>Sign out</Button>
+ <Button variant="ghost" className="w-full" onClick={async () => {
+                  // Ensure logout is called correctly as a function and wait for it to complete
+                  await logout();
+                  // Close the mobile menu after signing out
+                  setIsMenuOpen(false);
+                  // Navigate after successful sign out
+ navigate("/login"); }}>Sign out</Button>
              </>
             
             ) : (
