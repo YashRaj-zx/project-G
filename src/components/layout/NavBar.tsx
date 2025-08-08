@@ -19,7 +19,7 @@ const NavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
 
   // We now use a simpler profile menu with just navigation options
   return (
@@ -101,8 +101,9 @@ const NavBar = () => {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={async () => {
-                  // Call your sign-out function here
-                  await useAuth().signOut();}}>Sign out</DropdownMenuItem>
+ await signOut();
+ navigate("/login");
+ }}>Sign out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
@@ -184,7 +185,7 @@ const NavBar = () => {
                 {/* Optionally add mobile user menu items here if needed */}
                 {/* For now, just showing a placeholder/close button */}
                  <Button variant="ghost" className="w-full" onClick={async () => {
-                   await useAuth().signOut(); setIsMenuOpen(false); }}>Sign out</Button>
+ await signOut(); navigate("/login"); setIsMenuOpen(false); }}>Sign out</Button>
              </>
             
             ) : (
