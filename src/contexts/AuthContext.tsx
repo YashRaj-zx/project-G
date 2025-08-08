@@ -6,6 +6,7 @@ export interface User {
   name: string;
   email: string;
   createdAt: string;
+  photoURL?: string;
 }
 
 interface AuthContextType {

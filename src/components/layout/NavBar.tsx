@@ -53,7 +53,6 @@ const NavBar = () => {
           </Link>
 
           {user && (
-          {user && (
             <Link
               to="/create-echo"
               className={`${
@@ -63,7 +62,7 @@ const NavBar = () => {
               } hover:text-echoes-purple transition-colors`}
             >
               Create Echo
-            </Link>
+            </Link>)}
           )}
  {user && (
             <Link
@@ -74,13 +73,12 @@ const NavBar = () => {
                   : 'text-foreground/80' 
               } hover:text-echoes-purple transition-colors`}
             >Dashboard</Link>)}
-          )}
           {user && (<DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative rounded-full h-8 w-8 p-0">
                   <Avatar>
                     <AvatarImage src="/placeholder.svg" alt={user?.name || 'Guest'} />
-                    <AvatarFallback src={user?.photoURL || '/public/ghost-icon.png'}>
+                    <AvatarFallback>
                       {user?.name?.charAt(0) || 'G'}
                     </AvatarFallback>
                   </Avatar>
