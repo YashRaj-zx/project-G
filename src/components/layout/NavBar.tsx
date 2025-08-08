@@ -71,33 +71,44 @@ const NavBar = () => {
           >
             Dashboard
           </Link>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative rounded-full h-8 w-8 p-0">
-                <Avatar>
-                  <AvatarImage src="/placeholder.svg" alt={user?.name || 'Guest'} />
-                  <AvatarFallback>
-                    {user?.name?.charAt(0) || 'G'}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>
-                {user?.name || 'Guest'}
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/dashboard')}>
-                <UserIcon className="mr-2 h-4 w-4" />
-                Dashboard
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/create-echo')}>
-                <Settings className="mr-2 h-4 w-4" />
-                Create Echo
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative rounded-full h-8 w-8 p-0">
+                  <Avatar>
+                    <AvatarImage src="/placeholder.svg" alt={user?.name || 'Guest'} />
+                    <AvatarFallback>
+                      {user?.name?.charAt(0) || 'G'}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>
+                  {user?.name || 'Guest'}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                  <UserIcon className="mr-2 h-4 w-4" />
+                  Dashboard
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/create-echo')}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Create Echo
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <>
+              <Link to="/login">
+                <Button variant="ghost">Login</Button>
+              </Link>
+              <Link to="/signup">
+                <Button>Sign up</Button>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile menu toggle */}
@@ -161,6 +172,20 @@ const NavBar = () => {
             >
               Dashboard
             </Link>
+            {user ? (
+              // Render mobile user menu here if needed, or just close menu
+              <div className="w-full text-center">
+                 <Button variant="ghost" onClick={() => setIsMenuOpen(false)}>Profile (close menu)</Button>
+              </div>
+            ) : (
+              <>
+                <Link to="/login" className="text-lg" onClick={() => setIsMenuOpen(false)}>
+                  <Button variant="ghost" className="w-full">Login</Button>
+                </Link>
+                <Link to="/signup" className="text-lg" onClick={() => setIsMenuOpen(false)}>
+                  <Button className="w-full">Sign up</Button>
+                </Link>
+              </>)}
           </div>
         </div>
       )}
