@@ -62,8 +62,7 @@ const NavBar = () => {
               } hover:text-echoes-purple transition-colors`}
             >
               Create Echo
-            </Link>)}
-          )}
+            </Link>
  {user && (
  <Link
  to="/dashboard"
