@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound"; 
+import React from "react";
 import HowItWorks from "./pages/HowItWorks";
 import Pricing from "./pages/Pricing";
 import VideoCall from "./pages/VideoCall";
@@ -19,19 +20,19 @@ import "./styles/videoCall.css";
 
 const queryClient = new QueryClient();
 
+// Define a ProtectedRoute component
+const ProtectedRoute = ({ element }: { element: React.ReactNode }) => {
+  const { user } = useAuth();
+  if (!user) {
+    // Redirect to login page if not authenticated
+    return <Navigate to="/login" replace />;
+  }
+  return element;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      {/* Define a ProtectedRoute component */}
-      const ProtectedRoute = ({ element }: { element: React.ReactNode }) => {
-        const { user } = useAuth();
-        if (!user) {
-          // Redirect to login page if not authenticated
-          return <Navigate to="/login" replace />;
-        }
-        return element;
-      };
-      
       <TooltipProvider>
         <Toaster />
         <Sonner />
