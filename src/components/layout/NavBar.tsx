@@ -53,12 +53,13 @@ const NavBar = () => {
           </Link>
 
           {user && (
+          {user && (
             <Link
               to="/create-echo"
               className={`${
                 location.pathname === '/create-echo'
                   ? 'text-echoes-purple'
-                  : 'text-foreground/80'
+                  : 'text-foreground/80' 
               } hover:text-echoes-purple transition-colors`}
             >
               Create Echo
@@ -70,12 +71,11 @@ const NavBar = () => {
               className={`${
                 location.pathname === '/dashboard'
                   ? 'text-echoes-purple'
-                  : 'text-foreground/80'
+                  : 'text-foreground/80' 
               } hover:text-echoes-purple transition-colors`}
             >Dashboard</Link>)}
-
-          {user ? (
-            <DropdownMenu>
+          )}
+          {user && (<DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative rounded-full h-8 w-8 p-0">
                   <Avatar>
@@ -108,7 +108,7 @@ const NavBar = () => {
                   // Navigate after successful sign out
  navigate("/login");
  }}>Sign out</DropdownMenuItem>
-              </DropdownMenuContent>
+ </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <>
