@@ -11,6 +11,8 @@ import Pricing from "./pages/Pricing";
 import VideoCall from "./pages/VideoCall";
 import Dashboard from "./pages/Dashboard";
 import CreateEcho from "./pages/CreateEcho";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 import { AuthProvider } from "./contexts/AuthContext";
 import "./styles/videoCall.css";
 
@@ -18,6 +20,16 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    {/* Define a ProtectedRoute component */}
+    const ProtectedRoute = ({ element }: { element: React.ReactNode }) => {
+      const { user } = useAuth();
+      if (!user) {
+        // Redirect to login page if not authenticated
+        return <Navigate to="/login" replace />;
+      }
+      return element;
+    };
+
     <AuthProvider>
       <TooltipProvider>
         <Toaster />
@@ -28,11 +40,10 @@ const App = () => (
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/video-call" element={<VideoCall />} />
-            <Route path="/create-echo" element={<CreateEcho />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            {/* Redirect login and signup routes to dashboard */}
-            <Route path="/login" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/signup" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/create-echo" element={<ProtectedRoute element={<CreateEcho />} />} />
+            <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
