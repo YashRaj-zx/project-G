@@ -1,8 +1,10 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { Video, Plus, User, History } from "lucide-react";
 import NavBar from "@/components/layout/NavBar";
@@ -32,7 +34,7 @@ interface Call {
 }
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [echoes, setEchoes] = useState<Echo[]>([]);
   const [calls, setCalls] = useState<Call[]>([]);
@@ -63,19 +65,34 @@ const Dashboard = () => {
     navigate(`/video-call?echo=${echoId}`);
   };
 
+  const handleSignOut = async () => {
+    await logout();
+    navigate("/login");
+    toast.success("Successfully signed out");
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <NavBar />
       <main className="flex-grow py-16 px-4 pt-24">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-10">
-            <h1 className="text-3xl font-bold text-gradient mb-1">Welcome, {user?.name || 'Guest'}</h1>
-            {user?.email && (
-              <p className="text-foreground/60 text-sm mb-2">{user.email}</p>
-            )}
-            <p className="text-foreground/60 text-base">
-              Manage your echoes and past conversations
-            </p>
+          <div className="mb-10 flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold text-gradient mb-1">Welcome, {user?.name || 'Guest'}</h1>
+              {user?.email && (
+                <p className="text-foreground/60 text-sm mb-2">{user.email}</p>
+              )}
+              <p className="text-foreground/60 text-base">
+                Manage your echoes and past conversations
+              </p>
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={handleSignOut}
+              className="border-echoes-purple text-echoes-purple hover:bg-echoes-light/50"
+            >
+              Sign Out
+            </Button>
           </div>
 
           <Tabs defaultValue="echoes" className="space-y-8">
