@@ -21,7 +21,7 @@ const NavBar = () => {
   const { user, logout } = useAuth();
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-echoes-light py-4">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 md:bg-background/80 bg-background backdrop-blur-md border-b border-echoes-light py-4">
       <div className="container mx-auto flex items-center justify-between px-4">
         <Link to="/" className="flex items-center">
           <span className="text-2xl font-bold text-gradient">Echoes Beyond</span>
@@ -93,16 +93,48 @@ const NavBar = () => {
           )}
         </div>
 
-        {/* Mobile menu toggle */}
+        {/* Mobile menu toggle or user avatar */}
         <div className="md:hidden">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Toggle menu"
-          >
-            {isMenuOpen ? <X /> : <Menu />}
-          </Button>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative rounded-full h-8 w-8 p-0">
+                  <Avatar>
+                    <AvatarImage src={user?.photoURL || '/ghost-icon.png'} alt={user?.name || 'Guest'} />
+                    <AvatarFallback>
+                      {user?.name?.charAt(0) || 'G'}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end"> 
+                <DropdownMenuLabel>{user?.name || 'Guest'}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                  <UserIcon className="mr-2 h-4 w-4" />
+                  Dashboard
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/create-echo')}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Echo
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={async () => {
+                  await logout();
+                  navigate("/login");
+                }}>Sign out</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label="Toggle menu"
+            >
+              {isMenuOpen ? <X /> : <Menu />}
+            </Button>
+          )}
         </div>
       </div>
 
