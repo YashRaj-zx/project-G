@@ -1,6 +1,5 @@
 
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { Video, Plus, User, History } from "lucide-react";
 import NavBar from "@/components/layout/NavBar";
-import Footer from "@/components/layout/Footer";
 import { useAuth } from '../contexts/AuthContext';
 // import Gloomie from "@/components/Gloomie"; // Gloomie is now conditionally rendered in App.tsx
 import { Link } from "react-router-dom";
@@ -35,10 +33,11 @@ interface Call {
 }
 
 const Dashboard = () => {
-  const { user, logout, tourCompleted, setTourCompleted } = useAuth(); // Get tourCompleted and setTourCompleted from auth context
+  const navigate = useNavigate();
+  const { user, logout } = useAuth(); // Get tourCompleted and setTourCompleted from auth context
   const [calls, setCalls] = useState<Call[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tourActive, setTourActive] = useState(false);
+  const [echoes, setEchoes] = useState<Echo[]>([]); // State for echoes
   const [tourStep, setTourStep] = useState(0);
 
   // Load data from localStorage based on user ID
@@ -52,18 +51,11 @@ const Dashboard = () => {
         setCalls(JSON.parse(storedCalls));
       }
     }
-
-    // Check if tour has been completed
-    const tourCompleted = localStorage.getItem('gloomieTourCompleted');
-    if (!tourCompleted) {
-      // Start tour after a delay if not completed
-      const timer = setTimeout(() => {
-        // The tour component itself should manage setting tourCompleted to true when finished.
-        // For now, we'll just ensure Gloomie is rendered based on !tourCompleted in App.tsx
-      }, 1000); // 1 second delay
-      return () => clearTimeout(timer); // Cleanup the timer
+    // Get user's echoes
+    const storedEchoes = localStorage.getItem(`echoes_${user.id}`);
+    if (storedEchoes) {
+      setEchoes(JSON.parse(storedEchoes));
     }
-
     setLoading(false);
   }, [user]);
 
@@ -231,7 +223,6 @@ const Dashboard = () => {
           </Tabs>
         </div>
       </main>
-      <Footer />
     </div>
   );
 };
