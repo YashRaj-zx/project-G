@@ -39,7 +39,8 @@ const PrivacyPolicy: React.FC = () => {
         <ul>
           <li>With service providers who help us operate our website.</li>
           <li>To comply with legal obligations.</li>
-          <li>With your explicit consent, for purposes clearly outlined to you.
+          <li>With your explicit consent, for purposes clearly outlined to you.</li>
+        </ul>
         </ul>
         <h2>Data Security</h2>
         <p>
