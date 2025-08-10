@@ -139,42 +139,78 @@ const NavBar = () => {
       </div>
 
       {/* Mobile menu */}
-      {isMenuOpen && !user && (
+      {isMenuOpen && (
         <div className="md:hidden fixed inset-0 top-16 bg-background z-40 animate-fade-in">
-          <div className="flex flex-col p-6 space-y-6">
-            <Link 
-              to="/" 
-              className={`text-lg ${
-                location.pathname === '/' 
-                  ? 'text-echoes-purple' 
-                  : 'text-foreground/80'
-              } hover:text-echoes-purple transition-colors`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Home
-            </Link>
-            <Link 
-              to="/login" 
-              className={`text-lg ${
-                location.pathname === '/login' 
-                  ? 'text-echoes-purple' 
-                  : 'text-foreground/80'
-              } hover:text-echoes-purple transition-colors`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Login
-            </Link>
-            <Link 
-              to="/signup" 
-              className={`text-lg ${
-                location.pathname === '/signup' 
-                  ? 'text-echoes-purple' 
-                  : 'text-foreground/80'
-              } hover:text-echoes-purple transition-colors`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Sign up
-            </Link>
+          <div className="flex flex-col p-6 space-y-4">
+            {user ? (
+              <>
+                <div className="text-lg font-medium text-foreground mb-2">
+                  {user.name}
+                </div>
+                <Link 
+                  to="/dashboard" 
+                  className="flex items-center gap-3 text-foreground/80 hover:text-echoes-purple transition-colors py-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <UserIcon className="h-4 w-4" />
+                  Dashboard
+                </Link>
+                <Link 
+                  to="/create-echo" 
+                  className="flex items-center gap-3 text-foreground/80 hover:text-echoes-purple transition-colors py-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Plus className="h-4 w-4" />
+                  Create Echo
+                </Link>
+                <button 
+                  className="flex items-center gap-3 text-foreground/80 hover:text-echoes-purple transition-colors py-2 text-left w-full"
+                  onClick={async () => {
+                    await logout();
+                    setIsMenuOpen(false);
+                    navigate("/login");
+                  }}
+                >
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link 
+                  to="/" 
+                  className={`text-lg ${
+                    location.pathname === '/' 
+                      ? 'text-echoes-purple' 
+                      : 'text-foreground/80'
+                  } hover:text-echoes-purple transition-colors`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Home
+                </Link>
+                <Link 
+                  to="/login" 
+                  className={`text-lg ${
+                    location.pathname === '/login' 
+                      ? 'text-echoes-purple' 
+                      : 'text-foreground/80'
+                  } hover:text-echoes-purple transition-colors`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Login
+                </Link>
+                <Link 
+                  to="/signup" 
+                  className={`text-lg ${
+                    location.pathname === '/signup' 
+                      ? 'text-echoes-purple' 
+                      : 'text-foreground/80'
+                  } hover:text-echoes-purple transition-colors`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Sign up
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}
