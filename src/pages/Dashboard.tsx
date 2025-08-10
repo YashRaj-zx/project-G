@@ -9,6 +9,7 @@ import { Video, Plus, User, History } from "lucide-react";
 import NavBar from "@/components/layout/NavBar";
 import { useAuth } from '../contexts/AuthContext';
 // import Gloomie from "@/components/Gloomie"; // Gloomie is now conditionally rendered in App.tsx
+import Gloomie from "@/components/Gloomie"; // Import Gloomie component
 import { Link, useNavigate } from "react-router-dom";
 
 // Types for our data
@@ -34,9 +35,9 @@ interface Call {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, tourCompleted, setTourCompleted } = useAuth(); // Get tourCompleted and setTourCompleted from AuthContext
   const [calls, setCalls] = useState<Call[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Use a more descriptive name if this loading state is for a specific part of the dashboard
   const [echoes, setEchoes] = useState<Echo[]>([]); // State for echoes
   const [tourStep, setTourStep] = useState(0);
 
@@ -58,6 +59,7 @@ const Dashboard = () => {
     }
     setLoading(false);
   }, [user]);
+  const [isGloomieVisible, setIsGloomieVisible] = useState(true); // State to control Gloomie visibility
 
 
   const handleStartCall = (echoId: string) => {
@@ -71,7 +73,12 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col"> {/* Added relative positioning for Gloomie */}
+    <div className="relative min-h-screen flex flex-col">
+      {/* Gloomie component - positioned fixed for assistant behavior */}
+      {isGloomieVisible && (
+        <Gloomie />
+      )}
+
       <NavBar />
       <main className="flex-grow py-16 px-4 pt-24">
         <div className="max-w-7xl mx-auto">
