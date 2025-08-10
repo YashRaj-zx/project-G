@@ -48,6 +48,7 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
+
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/how-it-works" element={<HowItWorks />} />
@@ -67,8 +68,8 @@ const App = () => {
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/ethical-guidelines" element={<EthicalGuidelines />} />
               <Route path="/cookie-policy" element={<CookiePolicy />} />
-              <Route path="*" element={<NotFound />} />
-          </BrowserRouter>
+              <Route path="*" element={<NotFound />} />            </Routes>
+          </BrowserRouter> 
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>
