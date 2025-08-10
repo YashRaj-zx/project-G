@@ -9,7 +9,7 @@ const plans = [
   {
     name: "Basic",
     price: "29",
-    description: "Perfect for getting started with AI conversations",
+    description: "Connect with a basic digital echo of your loved one.",
     features: [
       "30 minutes of video calls per month",
       "Basic voice customization",
@@ -21,12 +21,12 @@ const plans = [
   {
     name: "Premium",
     price: "79",
-    description: "Enhanced features for deeper connections",
+    description: "Experience a more lifelike and personalized connection.",
     features: [
       "2 hours of video calls per month",
-      "Advanced voice customization",
+      "Enhanced voice synthesis and customization",
       "HD avatar quality",
-      "Priority support",
+      "Priority customer support",
       "Extended memory storage",
       "Memory timeline feature",
       "Multiple avatar profiles"
@@ -35,13 +35,13 @@ const plans = [
   {
     name: "Ultimate",
     price: "149",
-    description: "Maximum quality and unlimited interactions",
+    description: "Unlock the full potential for deeply immersive interactions.",
     features: [
       "Unlimited video calls",
-      "Premium voice & avatar quality",
-      "Multiple language support",
+      "Premium voice synthesis and ultra-realistic avatar quality",
+      "Advanced conversational AI with nuanced responses",
       "24/7 priority support",
-      "Unlimited memory storage",
+      "Unlimited and secure memory storage",
       "Advanced memory timeline",
       "Custom voice training",
       "Early access to new features"

@@ -6,23 +6,23 @@ import { ArrowRight, Upload, Mic, MessageSquare, Video } from "lucide-react";
 
 const steps = [
   {
-    title: "Upload Photos",
-    description: "Begin by uploading clear photos of your loved one to create their digital avatar.",
+    title: "Upload Personal Data",
+    description: "Start by uploading videos, texts, social media data, and other personal information of your loved one. This data is used to reconstruct their personality traits and conversational patterns.",
     icon: <Upload className="w-8 h-8 text-echoes-purple" />
   },
   {
-    title: "Add Voice Samples",
-    description: "Provide voice recordings to recreate their unique voice and speaking patterns.",
+    title: "AI Processing",
+    description: "Our advanced AI uses machine learning, voice synthesis, facial animation, and memory modeling to process the uploaded data. This includes creating a lifelike video avatar and simulating their unique voice patterns and emotional tones.",
     icon: <Mic className="w-8 h-8 text-echoes-purple" />
   },
   {
-    title: "Share Memories",
-    description: "Input personal stories and conversations to shape their personality and responses.",
+    title: "Create Your Echo",
+    description: "Once the AI has processed the data, your 'Echo' is created - a digital recreation of your loved one ready for interaction.",
     icon: <MessageSquare className="w-8 h-8 text-echoes-purple" />
   },
   {
     title: "Connect Through Video",
-    description: "Start video calls with your AI-recreated loved one in a private, secure environment.",
+    description: "Start private, secure video calls with your AI-recreated loved one. Converse with the AI version, designed to feel deeply personal, emotional, and meaningful.",
     icon: <Video className="w-8 h-8 text-echoes-purple" />
   }
 ];
