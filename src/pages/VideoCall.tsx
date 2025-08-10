@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import MobileVoiceCall from "@/components/MobileVoiceCall";
 import NavBar from "@/components/layout/NavBar";
 
 const VideoCall = () => {

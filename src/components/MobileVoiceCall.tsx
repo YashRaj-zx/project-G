@@ -1,5 +1,6 @@
 
 import { useState, useEffect, useRef } from "react";
+import { useAuth } from '../contexts/AuthContext';
 import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Volume2, VolumeX, PhoneOff } from "lucide-react";
 import { textToSpeech, getValidVoiceId } from "@/utils/elevenLabsApi";
