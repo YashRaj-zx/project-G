@@ -17,20 +17,11 @@ interface AuthContextType {
   signup: (userData: Omit<User, "id" | "createdAt"> & { password: string }) => User;
 }
 
-// Create a default guest user
-const guestUser: User = {
-  id: 'guest-user',
-  name: 'Guest',
-  email: 'guest@example.com',
-  createdAt: new Date().toISOString()
-};
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Always start with an authenticated state using the guest user
-  const [user, setUser] = useState<User | null>(guestUser);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   // Check for existing user data on mount
   useEffect(() => {
@@ -38,24 +29,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (storedUser) {
       const userData = JSON.parse(storedUser);
       setUser(userData);
-    } else {
-      // If no user exists in localStorage, set the guest user
-      localStorage.setItem('user', JSON.stringify(guestUser));
+      setIsAuthenticated(true);
     }
   }, []);
 
-  // These authentication functions are kept for backwards compatibility
-  // but now they will always succeed and have minimal effect
   const login = (credentials: {email: string, password: string}) => {
-    // Set a custom name if provided in email field (for guest personalization)
+    // Simple login - in real app this would validate against a backend
     const customName = credentials.email ? credentials.email.split('@')[0] : 'Guest';
     const customUser = {
-      ...guestUser,
-      name: customName.charAt(0).toUpperCase() + customName.slice(1), // Capitalize first letter
+      id: `user-${Date.now()}`,
+      name: customName.charAt(0).toUpperCase() + customName.slice(1),
+      email: credentials.email,
+      createdAt: new Date().toISOString()
     };
     
     localStorage.setItem('user', JSON.stringify(customUser));
     setUser(customUser);
+    setIsAuthenticated(true);
     return customUser;
   };
 
@@ -70,14 +60,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { password, ...userWithoutPassword } = newUser;
     localStorage.setItem('user', JSON.stringify(userWithoutPassword));
     setUser(userWithoutPassword);
+    setIsAuthenticated(true);
     
     return userWithoutPassword;
   };
 
   const logout = () => {
-    // Reset to the guest user
-    localStorage.setItem('user', JSON.stringify(guestUser));
-    setUser(guestUser);
+    localStorage.removeItem('user');
+    setUser(null);
+    setIsAuthenticated(false);
   };
 
   return (
