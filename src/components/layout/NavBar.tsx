@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Menu, X, User as UserIcon, Plus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
