@@ -174,7 +174,7 @@ const Dashboard = () => {
                       </CardContent>
                       <CardFooter className="flex gap-2">
                         <Button
-                          variant=\"outline\"
+                          variant="outline"
                           className="text-echoes-purple border-echoes-purple flex-1"
                           onClick={() => handleStartCall(echo.id)}
                           >
@@ -224,7 +224,7 @@ const Dashboard = () => {
                       </CardHeader>
                       <CardFooter>
                         <Button
-                          variant=\"outline\"
+                          variant="outline"
                           className="w-full"
                           onClick={() => navigate(`/call-recording/${call.id}`)}
                         >
