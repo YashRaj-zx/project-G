@@ -34,3 +34,24 @@ export const generateAvatarResponse = async (
     throw new Error("Failed to generate avatar response");
   }
 };
+
+export const sendChatMessage = async (message: string): Promise<string> => {
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.message; // Assuming the API returns { message: 'AI response' }
+  } catch (error) {
+    console.error('Error sending message to Gemini API:', error);
+    return 'Error: Could not get a response from the AI.'; // Or handle the error as you see fit
+  }
+};
