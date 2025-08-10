@@ -72,6 +72,7 @@ const Dashboard = () => {
     toast.success("Successfully signed out");
   };
 
+  console.log('isGloomieVisible:', isGloomieVisible);
   return (
     <div className="relative min-h-screen flex flex-col">
       {/* Gloomie component - positioned fixed for assistant behavior */}
