@@ -1,6 +1,7 @@
 
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -28,6 +29,7 @@ import Signup from "./pages/Signup";
 import Gloomie from "./components/Gloomie";
 import { AuthProvider } from "./contexts/AuthContext";
 import "./styles/videoCall.css";
+import { TourProvider } from "./contexts/TourContext";
 
 const queryClient = new QueryClient();
 
@@ -44,35 +46,37 @@ const ProtectedRoute = ({ element }: { element: React.ReactNode }) => {
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+      <TourProvider> {/* Wrap with TourProvider */}
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
 
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/how-it-works" element={<HowItWorks />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/video-call" element={<VideoCall />} />
-              <Route path="/create-echo" element={<ProtectedRoute element={<CreateEcho />} />} />
-              <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/about-us" element={<AboutUs />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/careers" element={<Careers />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/testimonials" element={<Testimonials />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/terms-of-service" element={<TermsOfService />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/ethical-guidelines" element={<EthicalGuidelines />} />
-              <Route path="/cookie-policy" element={<CookiePolicy />} />
-              <Route path="*" element={<NotFound />} />            </Routes>
-          </BrowserRouter> 
-        </TooltipProvider>
-      </AuthProvider>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/how-it-works" element={<HowItWorks />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/video-call" element={<VideoCall />} />
+                <Route path="/create-echo" element={<ProtectedRoute element={<CreateEcho />} />} />
+                <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/about-us" element={<AboutUs />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/careers" element={<Careers />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/testimonials" element={<Testimonials />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/ethical-guidelines" element={<EthicalGuidelines />} />
+                <Route path="/cookie-policy" element={<CookiePolicy />} />
+                <Route path="*" element={<NotFound />} />            </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
+      </TourProvider> {/* Close TourProvider */}
     </QueryClientProvider>
   );
 };

@@ -9,7 +9,7 @@ import { Video, Plus, User, History } from "lucide-react";
 import NavBar from "@/components/layout/NavBar";
 import { useAuth } from '../contexts/AuthContext';
 // import Gloomie from "@/components/Gloomie"; // Gloomie is now conditionally rendered in App.tsx
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 // Types for our data
 interface Echo {
@@ -34,7 +34,7 @@ interface Call {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth(); // Get tourCompleted and setTourCompleted from auth context
+  const { user, logout } = useAuth();
   const [calls, setCalls] = useState<Call[]>([]);
   const [loading, setLoading] = useState(true);
   const [echoes, setEchoes] = useState<Echo[]>([]); // State for echoes
