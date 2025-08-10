@@ -15,6 +15,8 @@ interface AuthContextType {
   login: (userData: {email: string, password: string}) => void;
   logout: () => void;
   signup: (userData: Omit<User, "id" | "createdAt"> & { password: string }) => User;
+  tourCompleted: boolean;
+  setTourCompleted: (completed: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,6 +24,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [tourCompleted, setTourCompletedState] = useState<boolean>(
+    localStorage.getItem('gloomieTourCompleted') === 'true'
+  );
+
+  const setTourCompleted = (completed: boolean) => {
+    setTourCompletedState(completed);
+    localStorage.setItem('gloomieTourCompleted', String(completed));
+  };
 
   // Check for existing user data on mount
   useEffect(() => {
@@ -72,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, signup }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, signup, tourCompleted, setTourCompleted }}>
       {children}
     </AuthContext.Provider>
   );

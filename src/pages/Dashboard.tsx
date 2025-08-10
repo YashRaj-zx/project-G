@@ -10,7 +10,7 @@ import { Video, Plus, User, History } from "lucide-react";
 import NavBar from "@/components/layout/NavBar";
 import Footer from "@/components/layout/Footer";
 import { useAuth } from '../contexts/AuthContext';
-import Gloomie from "@/components/Gloomie";
+// import Gloomie from "@/components/Gloomie"; // Gloomie is now conditionally rendered in App.tsx
 import { Link } from "react-router-dom";
 
 // Types for our data
@@ -35,9 +35,7 @@ interface Call {
 }
 
 const Dashboard = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const [echoes, setEchoes] = useState<Echo[]>([]);
+  const { user, logout, tourCompleted, setTourCompleted } = useAuth(); // Get tourCompleted and setTourCompleted from auth context
   const [calls, setCalls] = useState<Call[]>([]);
   const [loading, setLoading] = useState(true);
   const [tourActive, setTourActive] = useState(false);
@@ -47,16 +45,10 @@ const Dashboard = () => {
   useEffect(() => {
     setLoading(true);
     
-    if (user) {
-      // Get user's echoes
-      const storedEchoes = localStorage.getItem(`echoes_${user.id}`);
-      if (storedEchoes) {
-        setEchoes(JSON.parse(storedEchoes));
-      }
-      
+    if (user?.id) { // Ensure user and user.id are available
       // Get user's call history
       const storedCalls = localStorage.getItem(`calls_${user.id}`);
-      if (storedCalls) {
+      if (storedCalls) { // Use JSON.parse only if storedCalls exists
         setCalls(JSON.parse(storedCalls));
       }
     }
@@ -66,14 +58,15 @@ const Dashboard = () => {
     if (!tourCompleted) {
       // Start tour after a delay if not completed
       const timer = setTimeout(() => {
-        setTourActive(true);
+        // The tour component itself should manage setting tourCompleted to true when finished.
+        // For now, we'll just ensure Gloomie is rendered based on !tourCompleted in App.tsx
       }, 1000); // 1 second delay
       return () => clearTimeout(timer); // Cleanup the timer
     }
 
-    
     setLoading(false);
   }, [user]);
+
 
   const handleStartCall = (echoId: string) => {
     navigate(`/video-call?echo=${echoId}`);
@@ -87,7 +80,6 @@ const Dashboard = () => {
 
   return (
     <div className="relative min-h-screen flex flex-col"> {/* Added relative positioning for Gloomie */}
-      {tourActive && <Gloomie />} {/* Render Gloomie conditionally */}
       <NavBar />
       <main className="flex-grow py-16 px-4 pt-24">
         <div className="max-w-7xl mx-auto">
