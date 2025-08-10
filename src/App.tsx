@@ -8,6 +8,16 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound"; 
 import React from "react";
 import HowItWorks from "./pages/HowItWorks";
+import AboutUs from "./pages/AboutUs";
+import Blog from "./pages/Blog";
+import Careers from "./pages/Careers";
+import Contact from "./pages/Contact";
+import Testimonials from "./pages/Testimonials";
+import FAQ from "./pages/FAQ";
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import EthicalGuidelines from "./pages/EthicalGuidelines";
+import CookiePolicy from "./pages/CookiePolicy";
 import Pricing from "./pages/Pricing";
 import VideoCall from "./pages/VideoCall";
 import Dashboard from "./pages/Dashboard";
@@ -46,6 +56,16 @@ const App = () => (
             <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/about-us" element={<AboutUs />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/careers" element={<Careers />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/testimonials" element={<Testimonials />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/ethical-guidelines" element={<EthicalGuidelines />} />
+            <Route path="/cookie-policy" element={<CookiePolicy />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
