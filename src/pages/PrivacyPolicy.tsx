@@ -41,7 +41,6 @@ const PrivacyPolicy: React.FC = () => {
           <li>To comply with legal obligations.</li>
           <li>With your explicit consent, for purposes clearly outlined to you.</li>
         </ul>
-        </ul>
         <h2>Data Security</h2>
         <p>
           We take the security and privacy of your data with the utmost seriousness. All data you upload and provide to Echoes Beyond is encrypted and user-controlled. We employ robust security measures to protect your personal information from unauthorized access, use, or disclosure.
