@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Video, Plus, User, History } from "lucide-react";
 import NavBar from "@/components/layout/NavBar";
 import Footer from "@/components/layout/Footer";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from '../contexts/AuthContext';
 import Gloomie from "@/components/Gloomie";
 import { Link } from "react-router-dom";
 
