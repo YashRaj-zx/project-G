@@ -10,6 +10,7 @@ import { Video, Plus, User, History } from "lucide-react";
 import NavBar from "@/components/layout/NavBar";
 import Footer from "@/components/layout/Footer";
 import { useAuth } from "@/contexts/AuthContext";
+import Gloomie from "@/components/Gloomie";
 import { Link } from "react-router-dom";
 
 // Types for our data
@@ -39,6 +40,8 @@ const Dashboard = () => {
   const [echoes, setEchoes] = useState<Echo[]>([]);
   const [calls, setCalls] = useState<Call[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tourActive, setTourActive] = useState(false);
+  const [tourStep, setTourStep] = useState(0);
 
   // Load data from localStorage based on user ID
   useEffect(() => {
@@ -57,6 +60,17 @@ const Dashboard = () => {
         setCalls(JSON.parse(storedCalls));
       }
     }
+
+    // Check if tour has been completed
+    const tourCompleted = localStorage.getItem('gloomieTourCompleted');
+    if (!tourCompleted) {
+      // Start tour after a delay if not completed
+      const timer = setTimeout(() => {
+        setTourActive(true);
+      }, 1000); // 1 second delay
+      return () => clearTimeout(timer); // Cleanup the timer
+    }
+
     
     setLoading(false);
   }, [user]);
@@ -72,7 +86,8 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="relative min-h-screen flex flex-col"> {/* Added relative positioning for Gloomie */}
+      {tourActive && <Gloomie />} {/* Render Gloomie conditionally */}
       <NavBar />
       <main className="flex-grow py-16 px-4 pt-24">
         <div className="max-w-7xl mx-auto">
@@ -86,8 +101,8 @@ const Dashboard = () => {
                 Manage your echoes and past conversations
               </p>
             </div>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={handleSignOut}
               className="border-echoes-purple text-echoes-purple hover:bg-echoes-light/50"
             >
@@ -106,7 +121,7 @@ const Dashboard = () => {
                 Call History
               </TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="echoes">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-96">
                 <Link to="/create-echo">
@@ -158,11 +173,11 @@ const Dashboard = () => {
                         </div>
                       </CardContent>
                       <CardFooter className="flex gap-2">
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant=\"outline\"
                           className="text-echoes-purple border-echoes-purple flex-1"
                           onClick={() => handleStartCall(echo.id)}
-                        >
+                          >
                           <Video className="mr-2 h-4 w-4" />
                           Call
                         </Button>
@@ -208,8 +223,8 @@ const Dashboard = () => {
                         </CardDescription>
                       </CardHeader>
                       <CardFooter>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant=\"outline\"
                           className="w-full"
                           onClick={() => navigate(`/call-recording/${call.id}`)}
                         >
