@@ -139,7 +139,7 @@ const NavBar = () => {
       </div>
 
       {/* Mobile menu */}
-      {isMenuOpen && (
+      {isMenuOpen && !user && (
         <div className="md:hidden fixed inset-0 top-16 bg-background z-40 animate-fade-in">
           <div className="flex flex-col p-6 space-y-6">
             <Link 
@@ -154,57 +154,27 @@ const NavBar = () => {
               Home
             </Link>
             <Link 
-              to="/pricing" 
+              to="/login" 
               className={`text-lg ${
-                location.pathname === '/pricing' 
+                location.pathname === '/login' 
                   ? 'text-echoes-purple' 
                   : 'text-foreground/80'
               } hover:text-echoes-purple transition-colors`}
               onClick={() => setIsMenuOpen(false)}
             >
-              Pricing
+              Login
             </Link>
-
-            {user ? (
-              <>
-                <Link 
-                  to="/dashboard" 
-                  className={`text-lg ${
-                    location.pathname === '/dashboard' 
-                      ? 'text-echoes-purple' 
-                      : 'text-foreground/80'
-                  } hover:text-echoes-purple transition-colors`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Dashboard
-                </Link>
-                <Link 
-                  to="/create-echo" 
-                  className={`text-lg ${
-                    location.pathname === '/create-echo' 
-                      ? 'text-echoes-purple' 
-                      : 'text-foreground/80'
-                  } hover:text-echoes-purple transition-colors`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Create Echo
-                </Link>
-                <Button variant="ghost" className="w-full" onClick={async () => {
-                  await logout();
-                  setIsMenuOpen(false);
-                  navigate("/login");
-                }}>Sign out</Button>
-              </>
-            ) : (
-              <>
-                <Link to="/login" className="text-lg" onClick={() => setIsMenuOpen(false)}>
-                  <Button variant="ghost" className="w-full">Login</Button>
-                </Link>
-                <Link to="/signup" className="text-lg" onClick={() => setIsMenuOpen(false)}>
-                  <Button className="w-full">Sign up</Button>
-                </Link>
-              </>
-            )}
+            <Link 
+              to="/signup" 
+              className={`text-lg ${
+                location.pathname === '/signup' 
+                  ? 'text-echoes-purple' 
+                  : 'text-foreground/80'
+              } hover:text-echoes-purple transition-colors`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Sign up
+            </Link>
           </div>
         </div>
       )}

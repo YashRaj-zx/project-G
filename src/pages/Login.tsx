@@ -13,6 +13,7 @@ import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -29,8 +30,8 @@ const Login = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
-      toast.error("Please enter both email and password");
+    if (!name || !email || !password) {
+      toast.error("Please fill in all fields");
       return;
     }
     
@@ -59,6 +60,19 @@ const Login = () => {
           </div>
           
           <form onSubmit={handleLogin} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <div className="relative">
+                <Input 
+                  id="name" 
+                  type="text" 
+                  placeholder="Your name" 
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
