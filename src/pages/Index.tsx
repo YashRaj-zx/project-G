@@ -6,6 +6,7 @@ import FeaturesSection from "@/components/home/FeaturesSection";
 import ExperienceSection from "@/components/home/ExperienceSection";
 import TestimonialSection from "@/components/home/TestimonialSection";
 import CtaSection from "@/components/home/CtaSection";
+import Gloomie from "@/components/Gloomie";
 
 const Index = () => {
   return (
@@ -19,6 +20,7 @@ const Index = () => {
         <CtaSection />
       </main>
       <Footer />
+      <Gloomie />
     </div>
   );
 };
