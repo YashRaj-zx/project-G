@@ -47,7 +47,7 @@ const Gloomie: React.FC<GloomieProps> = ({ onClick }) => {
         onClick={handleClick}
       >
         {/* Apply the base animation class and control visibility/animation with state */}
-        <img src="/public/Gloomie.png" alt="Gloomie the Ghost" className={`h-24 w-24 ${animationState === 'fading-out' ? 'spooky-animation' : ''}`} />
+        <img src="/public/Gloomie.png" alt="Gloomie the Ghost" className={`h-24 w-24 ${animationState === 'fading-out' ? 'gloomie-fade-out' : animationState === 'fading-in' ? 'gloomie-fade-in' : ''}`} />
       </div>
 
       {isChatVisible && (

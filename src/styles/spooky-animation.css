@@ -1,0 +1,24 @@
+@keyframes gloomie-fade-out {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes gloomie-fade-in {
+  0%{opacity: 0;
+}
+  100% {
+    opacity: 1;
+  }
+}
+
+.gloomie-fade-out {
+  animation: gloomie-fade-out 0.5s ease-out forwards;
+}
+
+.gloomie-fade-in {
+  animation: gloomie-fade-in 0.5s ease-in forwards;
+}
