@@ -1,6 +1,10 @@
 import React from 'react';
 
-const Gloomie: React.FC = () => {
+interface GloomieProps {
+  onClick?: () => void;
+}
+
+const Gloomie: React.FC<GloomieProps> = ({ onClick }) => {
   const handleClick = () => {
     console.log('Gloomie clicked!');
     // Add your tour initiation logic or other functionality here
