@@ -34,16 +34,6 @@ const Gloomie: React.FC<GloomieProps> = ({ onClick }) => {
     }
   };
 
-  // Auto-hide after 5 seconds
-  useEffect(() => {
-    if (!isChatVisible) return;
-    const timer = setTimeout(() => {
-      setIsChatVisible(false);
-      setAnimationState('fading-out'); // Start fade-out animation
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, [isChatVisible]);
-
   // Show welcome message on first login
   useEffect(() => {
     const userId = user?.id;
@@ -61,10 +51,6 @@ const Gloomie: React.FC<GloomieProps> = ({ onClick }) => {
         localStorage.setItem(`gloomieWelcome_${userId}`, 'true');
       }
 
-      timer = setTimeout(() => {
-        setIsChatVisible(false);
-        setAnimationState('fading-out');
-      }, 5000);
     }
 
     return () => {
