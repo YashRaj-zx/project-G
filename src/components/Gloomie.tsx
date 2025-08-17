@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { sendChatMessage } from '../utils/geminiApi'; // Assuming sendChatMessage is in this path
 import '../styles/spooky-animation.css'; // Import the CSS file
+import { useAuth } from '../contexts/AuthContext'; // Assuming AuthContext is in this path
 
 type AnimationState = 'visible' | 'fading-out' | 'fading-in';
 
@@ -9,30 +10,61 @@ interface GloomieProps {
 }
 
 const Gloomie: React.FC<GloomieProps> = ({ onClick }) => {
+  const { user } = useAuth(); // Access user from AuthContext
   const [isChatVisible, setIsChatVisible] = useState(false);
-
-  const [animationState, setAnimationState] = useState<AnimationState>('visible');
   const handleClick = () => {
+    setAnimationState('visible'); // Reset animation state when clicked
+    // Close the chat if it's visible
+    if (isChatVisible) {
+      setIsChatVisible(false);
+      setAnimationState('fading-in'); // Start fade-in animation when closing
+    } else {
     // Only toggle visibility if Gloomie itself is clicked, not the chat interface
     // This needs refinement if the chat interface becomes a separate component
     // and we want to close it by clicking outside. For now, clicking the Gloomie
     // icon toggles the chat visibility.
     // This onClick handler is currently only used to toggle the chat, 
     // the original onClick prop is not used here directly.
-    setIsChatVisible(!isChatVisible);
-    if (!isChatVisible) {
-      setAnimationState('fading-out');
-    } else {
-      setAnimationState('fading-in');
+      setIsChatVisible(!isChatVisible);
     }
   };
 
+  const [animationState, setAnimationState] = useState<AnimationState>('visible');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+
+
   useEffect(() => {
-    if (animationState === 'fading-out') {
+    const timer = setTimeout(() => {
+      setIsChatVisible(false);
+      setAnimationState('fading-out'); // Start fade-out animation
+    }, 5000); // 5 seconds
+
+    return () => clearTimeout(timer);
+  }, [isChatVisible]); // Rerun timer effect when chat visibility changes
+
+  useEffect(() => {
+    const userId = user?.id; // Get user ID for local storage key
+    const hasShownWelcome = userId ? localStorage.getItem(`gloomieWelcome_${userId}`) : null;
+
+    if (user && !hasShownWelcome) {
+      // Show the chat automatically on login if welcome hasn't been shown
+      setIsChatVisible(true);
+      setAnimationState('fading-in'); // Start with fade-in
+      // Mark welcome message as shown for this user
+      if (userId) {
+        localStorage.setItem(`gloomieWelcome_${userId}`, 'true');
+      }
+
+      return () => clearTimeout(timer);
+    }
+  }, [user]); // Run this effect when the user object changes
+
+  useEffect(() => {
+    if (animationState === 'fading-out' && !isChatVisible) {
       const timer = setTimeout(() => {
-        // Optionally hide the icon after fading out if needed, 
-        // but we keep it visible to fade back in.
-      }, 1000); // Match this duration to your CSS animation duration for fading out
+        // Optionally hide the icon after fading out if needed, keep it visible to fade back in.
+      }, 500); // Match this duration to your CSS animation duration for fading out
       return () => clearTimeout(timer);
     }
     if (animationState === 'fading-in') {
@@ -43,11 +75,10 @@ const Gloomie: React.FC<GloomieProps> = ({ onClick }) => {
   return (
     <>
       <div 
-        className={`fixed bottom-4 right-4 z-50 cursor-pointer ${animationState === 'fading-out' ? 'gloomie-fade-out' : animationState === 'fading-in' ? 'gloomie-fade-in' : ''}`} 
+        className={`fixed bottom-4 right-4 z-50 cursor-pointer ${animationState === 'fading-out' ? 'gloomie-fade-out' : animationState === 'fading-in' ? 'gloomie-fade-in' : 'gloomie-fade-in'}`} // Default to fade-in when visible
         onClick={handleClick}
       >
-        {/* Apply the base animation class and control visibility/animation with state */}
-        <img src="/public/Gloomie.png" alt="Gloomie the Ghost" className={`h-24 w-24 ${animationState === 'fading-out' ? 'gloomie-fade-out' : animationState === 'fading-in' ? 'gloomie-fade-in' : ''}`} />
+ <img src="/Gloomie.png" alt="Gloomie the Ghost" className={`h-24 w-24 ${animationState === 'fading-out' ? 'gloomie-fade-out' : animationState === 'fading-in' ? 'gloomie-fade-in' : ''}`} />
       </div>
 
       {isChatVisible && (
@@ -59,7 +90,15 @@ const Gloomie: React.FC<GloomieProps> = ({ onClick }) => {
   );
 };
 
-export default Gloomie;
+interface Message {
+  text: string;
+  sender: 'user' | 'gloomie';
+}
+
+interface ChatInterfaceProps {
+  onClose: () => void;
+  userName?: string; // Add userName prop
+}
 
 interface Message {
   text: string;
@@ -68,9 +107,14 @@ interface Message {
 
 interface ChatInterfaceProps {
   onClose: () => void;
+  userName?: string;
 }
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
-  const [messages, setMessages] = useState<Message[]>([{ text: 'Hello! I am Gloomie. What can I help you with?', sender: 'gloomie' }]);
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, userName }) => {
+  const initialMessage = userName 
+    ? `Hello ${userName}! I am Gloomie. What can I help you with?`
+    : 'Hello! I am Gloomie. What can I help you with?';
+
+  const [messages, setMessages] = useState<Message[]>([{ text: initialMessage, sender: 'gloomie' }]);
   const [input, setInput] = useState('');
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,3 +176,5 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose }) => {
     </>
   );
 };
+
+export default Gloomie;
