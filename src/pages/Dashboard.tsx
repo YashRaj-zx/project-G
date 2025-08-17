@@ -1,18 +1,28 @@
-
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { Video, Plus, User, History } from "lucide-react";
 import NavBar from "@/components/layout/NavBar";
-import { useAuth } from '../contexts/AuthContext';
-// import Gloomie from "@/components/Gloomie"; // Gloomie is now conditionally rendered in App.tsx
-import Gloomie from "@/components/Gloomie"; // Import Gloomie component
+import { useAuth } from "../contexts/AuthContext";
+import Gloomie from "@/components/Gloomie"; // Floating AI assistant button
 import { Link, useNavigate } from "react-router-dom";
 
-// Types for our data
+// ✅ Types
 interface Echo {
   id: string;
   name: string;
@@ -35,33 +45,29 @@ interface Call {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, logout, tourCompleted, setTourCompleted } = useAuth(); // Get tourCompleted and setTourCompleted from AuthContext
-  const [calls, setCalls] = useState<Call[]>([]);
-  const [loading, setLoading] = useState(true); // Use a more descriptive name if this loading state is for a specific part of the dashboard
-  const [echoes, setEchoes] = useState<Echo[]>([]); // State for echoes
-  const [tourStep, setTourStep] = useState(0);
-  const [isAIAssistantVisible, setIsAIAssistantVisible] = useState(false); // State to control AI Assistant visibility
+  const { user, logout } = useAuth();
 
-  // Load data from localStorage based on user ID
+  const [calls, setCalls] = useState<Call[]>([]);
+  const [echoes, setEchoes] = useState<Echo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isAIAssistantVisible, setIsAIAssistantVisible] = useState(false);
+
+  // ✅ Load echoes & calls from localStorage
   useEffect(() => {
     setLoading(true);
-    
-    if (user?.id) { // Ensure user and user.id are available
-      // Get user's call history
+
+    if (user?.id) {
       const storedCalls = localStorage.getItem(`calls_${user.id}`);
-      if (storedCalls) { // Use JSON.parse only if storedCalls exists
-        setCalls(JSON.parse(storedCalls));
-      }
+      if (storedCalls) setCalls(JSON.parse(storedCalls));
+
+      const storedEchoes = localStorage.getItem(`echoes_${user.id}`);
+      if (storedEchoes) setEchoes(JSON.parse(storedEchoes));
     }
-    // Get user's echoes
-    const storedEchoes = localStorage.getItem(`echoes_${user.id}`);
-    if (storedEchoes) {
-      setEchoes(JSON.parse(storedEchoes));
-    }
+
     setLoading(false);
   }, [user]);
 
-
+  // ✅ Handlers
   const handleStartCall = (echoId: string) => {
     navigate(`/video-call?echo=${echoId}`);
   };
@@ -73,21 +79,38 @@ const Dashboard = () => {
   };
 
   const toggleAIAssistant = () => {
-    setIsAIAssistantVisible(!isAIAssistantVisible);
+    setIsAIAssistantVisible((prev) => !prev);
   };
 
   return (
+    <div className="flex flex-col min-h-screen">
+      {/* Floating AI Assistant */}
       <Gloomie onClick={toggleAIAssistant} />
       {isAIAssistantVisible && (
-        <AIAssistant onClose={() => setIsAIAssistantVisible(false)} />
+        // ✅ Replace with actual assistant component
+        <div className="fixed bottom-20 right-6 bg-white shadow-xl rounded-2xl p-4">
+          <button
+            className="text-sm text-red-500 mb-2"
+            onClick={() => setIsAIAssistantVisible(false)}
+          >
+            Close Assistant
+          </button>
+          <p>Hello 👻, I’m your AI assistant!</p>
+        </div>
       )}
 
+      {/* Navbar */}
       <NavBar />
+
+      {/* Main */}
       <main className="flex-grow py-16 px-4 pt-24">
         <div className="max-w-7xl mx-auto">
+          {/* Header */}
           <div className="mb-10 flex justify-between items-start">
             <div>
-              <h1 className="text-3xl font-bold text-gradient mb-1">Welcome, {user?.name || 'Guest'}</h1>
+              <h1 className="text-3xl font-bold text-gradient mb-1">
+                Welcome, {user?.name || "Guest"}
+              </h1>
               {user?.email && (
                 <p className="text-foreground/60 text-sm mb-2">{user.email}</p>
               )}
@@ -104,6 +127,7 @@ const Dashboard = () => {
             </Button>
           </div>
 
+          {/* Tabs */}
           <Tabs defaultValue="echoes" className="space-y-8">
             <TabsList className="mb-6">
               <TabsTrigger value="echoes" className="flex gap-2">
@@ -116,28 +140,37 @@ const Dashboard = () => {
               </TabsTrigger>
             </TabsList>
 
+            {/* Echoes Tab */}
             <TabsContent value="echoes">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 min-h-96">
+                {/* Create New Echo */}
                 <Link to="/create-echo">
                   <Card className="h-full border-dashed border-2 border-echoes-purple/30 hover:border-echoes-purple/70 transition-colors bg-echoes-light/5">
                     <CardContent className="h-64 flex flex-col items-center justify-center gap-4">
                       <div className="w-16 h-16 rounded-full bg-echoes-purple/10 flex items-center justify-center">
                         <Plus className="h-8 w-8 text-echoes-purple" />
                       </div>
-                      <h3 className="text-xl font-medium text-center">Create New Echo</h3>
-                      <p className="text-sm text-foreground/60 text-center">Design a new digital companion</p>
+                      <h3 className="text-xl font-medium text-center">
+                        Create New Echo
+                      </h3>
+                      <p className="text-sm text-foreground/60 text-center">
+                        Design a new digital companion
+                      </p>
                     </CardContent>
                   </Card>
                 </Link>
 
+                {/* User Echoes */}
                 {loading ? (
                   <Card className="h-64 flex items-center justify-center">
                     <p>Loading your echoes...</p>
                   </Card>
-                ) : echoes.length === 0 && !loading ? (
+                ) : echoes.length === 0 ? (
                   <Card className="h-64 flex items-center justify-center col-span-2">
                     <CardContent className="flex flex-col items-center justify-center text-center">
-                      <p className="text-center text-muted-foreground mb-4">You haven't created any echoes yet.</p>
+                      <p className="text-center text-muted-foreground mb-4">
+                        You haven’t created any echoes yet.
+                      </p>
                       <Link to="/create-echo">
                         <Button className="bg-echoes-purple hover:bg-echoes-accent">
                           Create Your First Echo
@@ -146,24 +179,29 @@ const Dashboard = () => {
                     </CardContent>
                   </Card>
                 ) : (
-                  echoes.map(echo => (
+                  echoes.map((echo) => (
                     <Card key={echo.id} className="h-full">
                       <CardHeader className="pb-2">
                         <div className="flex items-center gap-4 mb-2">
                           <Avatar className="h-16 w-16">
-                            <AvatarImage src="/ghost-icon.png" alt={echo.name} />
+                            <AvatarImage
+                              src={echo.imageUrl || "/ghost-icon.png"}
+                              alt={echo.name}
+                            />
                             <AvatarFallback>{echo.name.charAt(0)}</AvatarFallback>
                           </Avatar>
                         </div>
                         <CardTitle>{echo.name}</CardTitle>
                         <CardDescription className="text-foreground/60">
-                          Created on {new Date(echo.createdAt).toLocaleDateString()}
+                          Created on{" "}
+                          {new Date(echo.createdAt).toLocaleDateString()}
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
                         <p className="line-clamp-3">{echo.description}</p>
                         <div className="mt-2 text-sm">
-                          <span className="font-medium">Language:</span> {echo.language}
+                          <span className="font-medium">Language:</span>{" "}
+                          {echo.language}
                         </div>
                       </CardContent>
                       <CardFooter className="flex gap-2">
@@ -171,12 +209,12 @@ const Dashboard = () => {
                           variant="outline"
                           className="text-echoes-purple border-echoes-purple flex-1"
                           onClick={() => handleStartCall(echo.id)}
-                          >
+                        >
                           <Video className="mr-2 h-4 w-4" />
                           Call
                         </Button>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           className="flex-1"
                           onClick={() => navigate(`/edit-echo/${echo.id}`)}
                         >
@@ -187,9 +225,9 @@ const Dashboard = () => {
                   ))
                 )}
               </div>
-
             </TabsContent>
-            
+
+            {/* Calls Tab */}
             <TabsContent value="calls">
               {loading ? (
                 <Card className="h-64 flex items-center justify-center">
@@ -198,22 +236,32 @@ const Dashboard = () => {
               ) : calls.length === 0 ? (
                 <div className="text-center py-20 bg-echoes-light/5 rounded-lg">
                   <h3 className="text-xl font-medium mb-2">No calls yet</h3>
-                  <p className="text-foreground/60 mb-6">Make your first call to an echo to see history</p>
-                  <Button onClick={() => navigate("/create-echo")} className="bg-echoes-purple hover:bg-echoes-accent">
+                  <p className="text-foreground/60 mb-6">
+                    Make your first call to an echo to see history
+                  </p>
+                  <Button
+                    onClick={() => navigate("/create-echo")}
+                    className="bg-echoes-purple hover:bg-echoes-accent"
+                  >
                     Create Your First Echo
                   </Button>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {calls.map(call => (
+                  {calls.map((call) => (
                     <Card key={call.id} className="overflow-hidden">
                       <div className="h-40 overflow-hidden">
-                        <img src={call.previewImageUrl} alt={call.echoName} className="w-full h-full object-cover" />
+                        <img
+                          src={call.previewImageUrl}
+                          alt={call.echoName}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                       <CardHeader>
                         <CardTitle>{call.echoName}</CardTitle>
                         <CardDescription>
-                          {new Date(call.date).toLocaleDateString()} • {call.duration}
+                          {new Date(call.date).toLocaleDateString()} •{" "}
+                          {call.duration}
                         </CardDescription>
                       </CardHeader>
                       <CardFooter>
