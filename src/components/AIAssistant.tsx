@@ -38,7 +38,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose }) => {
       <div className="flex justify-between items-center p-4 border-b bg-gradient-to-r from-purple-500 to-pink-500 text-white">
         <div className="flex items-center">
  <img src="/public/Gloomie.png" alt="AI Assistant Icon" className="h-6 w-6 mr-2" />
-        <h3 className="text-lg font-semibold">AI Assistant</h3>
+ <h3 className="text-lg font-semibold">AI Assistant</h3>
         </div>
         <button className="text-gray-500 hover:text-gray-700" onClick={onClose}>
           &times;
