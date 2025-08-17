@@ -31,7 +31,7 @@ const Gloomie: React.FC<GloomieProps> = ({ onClick }) => {
       <AnimatePresence>
         {isChatVisible && (
           <motion.div 
-            className="fixed bottom-32 right-4 w-80 h-96 bg-white rounded-lg shadow-xl flex flex-col"
+            className="fixed bottom-32 right-4 w-80 h-96 bg-white rounded-lg shadow-xl flex flex-col z-[1000]"
             initial={{ opacity: 0, scale: 0.8, originX: '100%', originY: '100%' }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
