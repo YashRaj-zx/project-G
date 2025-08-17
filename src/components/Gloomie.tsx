@@ -36,8 +36,8 @@ const Gloomie: React.FC<GloomieProps> = ({ onClick }) => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setIsChatVisible(false);
-      setAnimationState('fading-out'); // Start fade-out animation
+ setIsChatVisible(false);
+ setAnimationState('fading-out'); // Start fade-out animation
     }, 5000); // 5 seconds
 
     return () => clearTimeout(timer);
@@ -45,6 +45,7 @@ const Gloomie: React.FC<GloomieProps> = ({ onClick }) => {
 
   useEffect(() => {
     const userId = user?.id; // Get user ID for local storage key
+    let timer: ReturnType<typeof setTimeout>; // Declare timer here
     const hasShownWelcome = userId ? localStorage.getItem(`gloomieWelcome_${userId}`) : null;
 
     if (user && !hasShownWelcome) {
@@ -56,7 +57,11 @@ const Gloomie: React.FC<GloomieProps> = ({ onClick }) => {
         localStorage.setItem(`gloomieWelcome_${userId}`, 'true');
       }
 
-      return () => clearTimeout(timer);
+      // Set timer to hide the chat after 5 seconds
+      timer = setTimeout(() => {
+        setIsChatVisible(false);
+        setAnimationState('fading-out'); // Start fade-out animation
+      }, 5000);
     }
   }, [user]); // Run this effect when the user object changes
 
