@@ -1,8 +1,10 @@
 import React from 'react';
+import Gloomie from '../components/Gloomie';
 
 const FAQ: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8">
+ <Gloomie />
       <h1 className="text-3xl font-bold mb-6">Frequently Asked Questions</h1>
 
       <div className="space-y-6">

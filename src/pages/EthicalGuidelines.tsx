@@ -1,9 +1,12 @@
 import React from 'react';
+import Gloomie from '../components/Gloomie';
 
 const EthicalGuidelines: React.FC = () => {
   return (
+    <>
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Ethical Guidelines</h1>
+      <Gloomie />
       <div className="prose max-w-none">
         <h2>Introduction</h2>
  <p>
@@ -49,6 +52,7 @@ const EthicalGuidelines: React.FC = () => {
 
       </div>
     </div>
+    </>
   );
 };
 

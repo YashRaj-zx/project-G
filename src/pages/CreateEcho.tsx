@@ -36,6 +36,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import VoiceCloner from "@/components/VoiceCloner";
+import Gloomie from "@/components/Gloomie";
 
 // Form validation schema
 const echoFormSchema = z.object({
@@ -425,6 +426,7 @@ const CreateEcho = () => {
       </main>
       <Footer />
     </div>
+    <Gloomie />
   );
 };
 

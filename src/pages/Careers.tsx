@@ -1,9 +1,11 @@
 import React from 'react';
+import Gloomie from '../components/Gloomie';
 
 const Careers: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Careers</h1>
+      <Gloomie />
       <div className="prose lg:prose-xl">
         <p>
           We are always looking for talented and passionate individuals to join our team.

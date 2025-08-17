@@ -1,4 +1,5 @@
 import React from 'react';
+import Gloomie from '../components/Gloomie';
 
 const CookiePolicy: React.FC = () => {
   return (

@@ -9,7 +9,6 @@ import { Video, Plus, User, History } from "lucide-react";
 import NavBar from "@/components/layout/NavBar";
 import { useAuth } from '../contexts/AuthContext';
 // import Gloomie from "@/components/Gloomie"; // Gloomie is now conditionally rendered in App.tsx
-import AIAssistant from "@/components/AIAssistant"; // Import AIAssistant component
 import Gloomie from "@/components/Gloomie"; // Import Gloomie component
 import { Link, useNavigate } from "react-router-dom";
 
@@ -78,9 +77,6 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col">
-      {/* Gloomie component - positioned fixed for assistant behavior */}
-      {/* Render Gloomie unconditionally and handle click to show assistant */}
       <Gloomie onClick={toggleAIAssistant} />
       {isAIAssistantVisible && (
         <AIAssistant onClose={() => setIsAIAssistantVisible(false)} />
