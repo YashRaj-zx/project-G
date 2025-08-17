@@ -7,7 +7,7 @@ const Gloomie: React.FC = () => {
   };
   return (
     <div className="fixed bottom-4 right-4 z-50" onClick={handleClick}>
-      <img src="/ghost-icon.png" alt="Gloomie the Ghost" className="h-16 w-16" />
+      <img src="/public/Gloomie.png" alt="Gloomie the Ghost" className="h-16 w-16" />
     </div>
   );
 };
