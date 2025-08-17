@@ -163,7 +163,7 @@ const CreateEcho = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <><div className="min-h-screen flex flex-col">
       <NavBar />
       <main className="flex-grow py-12 px-4">
         <div className="max-w-3xl mx-auto">
@@ -182,34 +182,32 @@ const CreateEcho = () => {
                 <div className="space-y-4">
                   <h2 className="text-xl font-semibold">Appearance</h2>
                   <div className="flex flex-col items-center space-y-4">
-                    <div 
+                    <div
                       className="w-48 h-48 rounded-full overflow-hidden border-2 border-dashed border-echoes-purple/50 flex items-center justify-center bg-echoes-purple/5"
                     >
                       {photoPreview ? (
-                        <img 
-                          src={photoPreview} 
-                          alt="Echo preview" 
-                          className="w-full h-full object-cover"
-                        />
+                        <img
+                          src={photoPreview}
+                          alt="Echo preview"
+                          className="w-full h-full object-cover" />
                       ) : (
                         <User className="h-16 w-16 text-echoes-purple/40" />
                       )}
                     </div>
-                    
-                    <Label 
-                      htmlFor="photo-upload" 
+
+                    <Label
+                      htmlFor="photo-upload"
                       className="cursor-pointer bg-echoes-purple/10 hover:bg-echoes-purple/20 text-echoes-purple px-4 py-2 rounded-md flex items-center gap-2 transition-colors"
                     >
                       <Upload className="h-4 w-4" />
                       Upload Photo
                     </Label>
-                    <Input 
-                      id="photo-upload" 
-                      type="file" 
-                      accept="image/*" 
-                      className="hidden" 
-                      onChange={handlePhotoChange} 
-                    />
+                    <Input
+                      id="photo-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handlePhotoChange} />
                     <FormDescription className="text-center">
                       Upload a clear photo for your Echo's appearance. We'll generate a human-like avatar that can communicate virtually.
                     </FormDescription>
@@ -232,22 +230,21 @@ const CreateEcho = () => {
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
-                    )}
-                  />
+                    )} />
 
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">Voice Selection</h3>
-                    
+
                     <Tabs defaultValue="predefined" value={activeTab} onValueChange={setActiveTab}>
                       <TabsList className="grid grid-cols-2 mb-4">
                         <TabsTrigger value="predefined">Predefined Voices</TabsTrigger>
                         <TabsTrigger value="clone">Clone a Voice</TabsTrigger>
                       </TabsList>
-                      
+
                       <TabsContent value="predefined" className="space-y-4">
                         <div className="space-y-3">
                           <Label>Select Language</Label>
-                          <RadioGroup 
+                          <RadioGroup
                             defaultValue="english"
                             className="grid grid-cols-2 gap-2 sm:grid-cols-4"
                             onValueChange={handleLanguageChange}
@@ -277,8 +274,8 @@ const CreateEcho = () => {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Voice Type</FormLabel>
-                              <Select 
-                                onValueChange={field.onChange} 
+                              <Select
+                                onValueChange={field.onChange}
                                 defaultValue={field.value}
                               >
                                 <FormControl>
@@ -298,8 +295,7 @@ const CreateEcho = () => {
                               </FormDescription>
                               <FormMessage />
                             </FormItem>
-                          )}
-                        />
+                          )} />
 
                         <FormField
                           control={form.control}
@@ -307,8 +303,8 @@ const CreateEcho = () => {
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Voice Selection</FormLabel>
-                              <Select 
-                                onValueChange={field.onChange} 
+                              <Select
+                                onValueChange={field.onChange}
                                 defaultValue={field.value}
                               >
                                 <FormControl>
@@ -337,10 +333,9 @@ const CreateEcho = () => {
                               </FormDescription>
                               <FormMessage />
                             </FormItem>
-                          )}
-                        />
+                          )} />
                       </TabsContent>
-                      
+
                       <TabsContent value="clone">
                         <VoiceCloner onVoiceCloned={handleVoiceCloned} />
                       </TabsContent>
@@ -354,19 +349,17 @@ const CreateEcho = () => {
                       <FormItem>
                         <FormLabel>Description</FormLabel>
                         <FormControl>
-                          <Textarea 
-                            placeholder="Describe your Echo in detail..." 
+                          <Textarea
+                            placeholder="Describe your Echo in detail..."
                             className="resize-none min-h-[100px]"
-                            {...field} 
-                          />
+                            {...field} />
                         </FormControl>
                         <FormDescription>
                           Provide details about your Echo's identity, background, and purpose.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
-                    )}
-                  />
+                    )} />
 
                   <FormField
                     control={form.control}
@@ -375,19 +368,17 @@ const CreateEcho = () => {
                       <FormItem>
                         <FormLabel>Personality Traits</FormLabel>
                         <FormControl>
-                          <Textarea 
-                            placeholder="Describe personality traits of your Echo..." 
+                          <Textarea
+                            placeholder="Describe personality traits of your Echo..."
                             className="resize-none"
-                            {...field} 
-                          />
+                            {...field} />
                         </FormControl>
                         <FormDescription>
                           Example: compassionate, witty, thoughtful, direct
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
-                    )}
-                  />
+                    )} />
 
                   <FormField
                     control={form.control}
@@ -396,25 +387,23 @@ const CreateEcho = () => {
                       <FormItem>
                         <FormLabel>Shared Memories (Optional)</FormLabel>
                         <FormControl>
-                          <Textarea 
-                            placeholder="Add specific memories you'd like your Echo to remember..." 
+                          <Textarea
+                            placeholder="Add specific memories you'd like your Echo to remember..."
                             className="resize-none"
-                            {...field} 
-                          />
+                            {...field} />
                         </FormControl>
                         <FormDescription>
                           Include important events, places, or people that your Echo should know about.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
-                    )}
-                  />
+                    )} />
                 </div>
               </div>
 
               <div className="flex justify-center pt-6">
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="bg-echoes-purple hover:bg-echoes-accent text-white px-8 py-2"
                 >
                   Create My Echo
@@ -425,8 +414,7 @@ const CreateEcho = () => {
         </div>
       </main>
       <Footer />
-    </div>
-    <Gloomie />
+    </div><Gloomie /></>
   );
 };
 
