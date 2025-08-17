@@ -79,18 +79,18 @@ const Gloomie: React.FC<GloomieProps> = ({ onClick }) => {
 
   return (
     <>
-      <div 
-        className={`fixed bottom-4 right-4 z-50 cursor-pointer ${animationState === 'fading-out' ? 'gloomie-fade-out' : animationState === 'fading-in' ? 'gloomie-fade-in' : 'gloomie-fade-in'}`} // Default to fade-in when visible
-        onClick={handleClick}
-      >
- <img src="/Gloomie.png" alt="Gloomie the Ghost" className={`h-24 w-24 ${animationState === 'fading-out' ? 'gloomie-fade-out' : animationState === 'fading-in' ? 'gloomie-fade-in' : ''}`} />
-      </div>
-
-      {isChatVisible && (
-        <div className="fixed bottom-32 right-4 w-80 h-96 bg-white rounded-lg shadow-xl flex flex-col z-[1000]">
-          <ChatInterface onClose={() => setIsChatVisible(false)} />
+      {!isChatVisible && ( // Conditionally render Gloomie when chat is not visible
+        <div
+          className={`fixed bottom-4 right-4 z-50 cursor-pointer ${animationState === 'fading-out' ? 'gloomie-fade-out' : animationState === 'fading-in' ? 'gloomie-fade-in' : 'gloomie-fade-in'}`} // Default to fade-in when visible
+          onClick={handleClick}
+        >
+          <img src="/Gloomie.png" alt="Gloomie the Ghost" className={`h-24 w-24 ${animationState === 'fading-out' ? 'gloomie-fade-out' : animationState === 'fading-in' ? 'gloomie-fade-in' : ''}`} />
         </div>
       )}
+
+      isChatVisible && (
+        <ChatInterface onClose={() => { setIsChatVisible(false); setAnimationState('fading-in'); }} userName={user?.name} /> {/* Pass onClose function and userName */}
+      )
     </>
   );
 };
@@ -149,7 +149,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, userName }) => {
       {/* Chat Header */}
       <div className="flex justify-between items-center p-4 bg-purple-500 text-white rounded-t-lg">
         <h3 className="text-lg font-semibold">Gloomie Chat</h3>
-        {/* Close button handled by parent Gloomie component */}
+        <button
+          className="text-white hover:text-gray-200"
+          onClick={onClose}
+        >
+          &times; {/* This is the HTML entity for the 'x' character */}
+        </button>
       </div>
       {/* Chat Body */}
       <div className="flex-1 p-4 overflow-y-auto">
