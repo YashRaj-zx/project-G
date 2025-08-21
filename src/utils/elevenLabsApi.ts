@@ -18,8 +18,7 @@ interface AvatarVideoResponse {
 }
 
 // API keys
-const PLAYHT_API_KEY = "ak-6ab1e48ed1e248b6b9769c10aba23ade";
-const PLAYHT_USER_ID = "x9zwH7tV4ac6QajGjHG0TLjS2ao2";
+const ELEVENLABS_API_KEY = "sk_8de5385f684d217caa84f070d064822919f99064c1af5c0c"; // Your ElevenLabs API Key
 
 // Default voices
 const DEFAULT_VOICES = {
@@ -33,27 +32,18 @@ const DEFAULT_VOICES = {
 
 // Validate and get proper voice ID
 export const getValidVoiceId = (voiceId: string): string => {
-  console.log(`Validating voice ID for Play.ht: ${voiceId}`);
-
-  if (voiceId && voiceId.startsWith("s3://")) {
-    console.log(`Using provided voice ID: ${voiceId}`);
-    return voiceId;
-  }
+  console.log(`Validating voice ID for ElevenLabs: ${voiceId}`);
 
   const lowerVoiceId = voiceId?.toLowerCase();
   if (lowerVoiceId && DEFAULT_VOICES[lowerVoiceId as keyof typeof DEFAULT_VOICES]) {
     console.log(
-      `Using mapped voice: ${lowerVoiceId} -> ${DEFAULT_VOICES[lowerVoiceId as keyof typeof DEFAULT_VOICES]}`
+      `Using mapped ElevenLabs voice: ${lowerVoiceId} -> ${DEFAULT_VOICES[lowerVoiceId as keyof typeof DEFAULT_VOICES]}`
     );
     return DEFAULT_VOICES[lowerVoiceId as keyof typeof DEFAULT_VOICES];
   }
 
-  console.log("Using default fallback voice for Play.ht: Sarah");
-  return DEFAULT_VOICES.sarah;
+  return voiceId || "21m00TedyVKMhqcXzPbh"; // Default ElevenLabs voice if none provided or invalid mapped voice
 };
-
-// Play.ht API base
-const PLAYHT_API_BASE = "https://api.play.ht/api/v2";
 
 // Voice cloning
 export const cloneVoice = async (
@@ -79,12 +69,11 @@ export const cloneVoice = async (
     const formData = new FormData();
     formData.append("file", audioFile, audioFile.name);
 
-    console.log("Making API request to Play.ht for cloning...");
+    console.log("Making API request to ElevenLabs for cloning...");
 
-    const response = await fetch(`${PLAYHT_API_BASE}/cloned-voices/sync`, {
+    const response = await fetch("https://api.elevenlabs.io/v1/voices/add", {
       method: "POST",
       headers: {
-        "X-User-ID": PLAYHT_USER_ID,
         "xi-api-key": apiKey.trim(),
       },
       body: formData,
@@ -138,24 +127,24 @@ export const textToSpeech = async (
   text: string,
   voiceId: string,
   language: string = "en-US",
-  apiKey: string = PLAYHT_API_KEY
+  apiKey: string = ELEVENLABS_API_KEY // Use ElevenLabs API Key
 ): Promise<TextToSpeechResponse> => {
   try {
     const validVoiceId = getValidVoiceId(voiceId);
 
-    const response = await fetch(`${PLAYHT_API_BASE}/tts`, {
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${validVoiceId}`, {
       method: "POST",
       headers: {
-        "X-User-ID": PLAYHT_USER_ID,
-        AUTHORIZATION: `Bearer ${apiKey}`,
+        "xi-api-key": apiKey, // Use ElevenLabs API key header
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         text,
-        voice_id: validVoiceId,
-        quality: "high",
-        speed: 1,
-        sample_rate: 44100,
+        model_id: "eleven_multilingual_v2", // Example multilingual model
+        voice_settings: {
+          similarity_boost: 0.75,
+          stability: 0.5,
+        },
       }),
     });
 
@@ -167,7 +156,7 @@ export const textToSpeech = async (
       };
     }
 
-    const blob = await response.blob();
+    const blob = await response.blob(); // Assuming ElevenLabs returns audio directly
     const audioUrl = URL.createObjectURL(blob);
 
     return { audioUrl, audioStream: response.body || undefined, success: true };
@@ -185,7 +174,7 @@ export const generateTalkingAvatar = async (
   voiceId: string,
   imageUrl: string,
   language: string = "en-US",
-  apiKey: string = PLAYHT_API_KEY
+  apiKey: string = ELEVENLABS_API_KEY
 ): Promise<AvatarVideoResponse> => {
   try {
     const audioResponse = await textToSpeech(text, voiceId, language, apiKey);
@@ -205,7 +194,7 @@ export const generateTalkingAvatar = async (
 
 // Get voices
 export const getAvailableVoices = async (
-  apiKey: string = PLAYHT_API_KEY
+  apiKey: string = ELEVENLABS_API_KEY
 ): Promise<any[]> => {
   try {
     const response = await fetch("https://api.elevenlabs.io/v1/voices", {
@@ -233,7 +222,7 @@ export const enhancedGenerateAvatarResponse = async (
   voiceId: string,
   language: string,
   geminiApiKey: string,
-  playhtApiKey: string = PLAYHT_API_KEY
+  playhtApiKey: string = ELEVENLABS_API_KEY // This still references playht, consider renaming or removing if not used
 ): Promise<any> => {
   try {
     const textResponse = `I understand you said: \"${message}\". How can I help you with that?`;
