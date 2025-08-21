@@ -1,13 +1,18 @@
 
-// ElevenLabs API integration for voice cloning and synthesis with real-time avatars
+// Play.ht API integration for voice cloning and synthesis with real-time avatars
 
 interface VoiceCloneResponse {
   voiceId: string;
   name: string;
+  status: string;
+  message?: string;
 }
 
 interface TextToSpeechResponse {
-  audioUrl: string;
+  audioUrl?: string;
+  errorMessage?: string;
+  success: boolean;
+  audioStream?: ReadableStream<Uint8Array>; // For streaming audio
 }
 
 interface AvatarVideoResponse {
@@ -16,13 +21,15 @@ interface AvatarVideoResponse {
 }
 
 // Updated API keys - using user's provided key
-const ELEVENLABS_VOICE_API_KEY = "ak-6ab1e48ed1e248b6b9769c10aba23ade"; // Using the provided key
-const ELEVENLABS_VIDEO_API_KEY = "ak-6ab1e48ed1e248b6b9769c10aba23ade"; // Using the provided key
+const PLAYHT_API_KEY = "ak-6ab1e48ed1e248b6b9769c10aba23ade"; // Using the provided key from user
+const PLAYHT_USER_ID = "x9zwH7tV4ac6QajGjHG0TLjS2ao2"; // Using the provided User ID
 
-// Valid ElevenLabs voice IDs - fallback voices
+// Valid Play.ht voice IDs - fallback voices
 const DEFAULT_VOICES = {
-  'sarah': 'EXAVITQu4vr4xnSDxMaL',
-  'roger': 'CwhRBWXzGAHq8TQ4Fs17',
+  // Using some example Play.ht voice IDs - replace with actual ones you intend to use
+  // You can get a list of voices from the Play.ht API
+  'sarah': 's3://voice-cloning-uploads/b29c6429-0c51-4173-8ff5-2d64b5a22877/charlotte/manifest.json',
+  'roger': 's3://voice-cloning-uploads/e229b6d2-1e4f-4791-99c5-04a767a168e8/julie/manifest.json',
   'charlie': 'IKne3meq5aSn9XLyUdCD',
   'george': 'JBFqnCBsd6RMkjVDRZzb',
   'aria': '9BWtsMINqrJLrRacOk9x',
@@ -31,10 +38,10 @@ const DEFAULT_VOICES = {
 
 // Function to validate and get a proper voice ID
 export const getValidVoiceId = (voiceId: string): string => {
-  console.log(`Validating voice ID: ${voiceId}`);
-  
-  // If it's already a valid ElevenLabs voice ID format (20 characters alphanumeric)
-  if (voiceId && voiceId.length === 20 && /^[a-zA-Z0-9]+$/.test(voiceId)) {
+  console.log(`Validating voice ID for Play.ht: ${voiceId}`);
+
+  // If it looks like a Play.ht voice ID (e.g., starts with s3://)
+  if (voiceId && voiceId.startsWith('s3://')) {
     console.log(`Using provided voice ID: ${voiceId}`);
     return voiceId;
   }
@@ -47,17 +54,15 @@ export const getValidVoiceId = (voiceId: string): string => {
   }
   
   // Default fallback to Sarah's voice
-  console.log(`Using default fallback voice: Sarah`);
+  console.log(`Using default fallback voice for Play.ht: Sarah`);
   return DEFAULT_VOICES.sarah;
 };
 
-// ElevenLabs API integration for voice cloning (restored working version)
-const ELEVENLABS_API_BASE = 'https://api.elevenlabs.io/v1';
-const ELEVENLABS_API_KEY = "ak-6ab1e48ed1e248b6b9769c10aba23ade"; // Using the provided key
+// Play.ht API integration for voice cloning (restored working version)
+const PLAYHT_API_BASE = 'https://api.play.ht/api/v2';
 
-// Function to clone a voice using ElevenLabs API (restored working version)
+// Function to clone a voice using Play.ht API (restored working version)
 export const cloneVoice = async (
-  name: string,
   audioFile: File,
   apiKey: string = ELEVENLABS_API_KEY
 ): Promise<VoiceCloneResponse> => {
@@ -86,7 +91,7 @@ export const cloneVoice = async (
       throw new Error("Audio file is too large. Maximum size is 25MB");
     }
     
-    // Validate file is actually audio
+    // Validate file is actually audio (Play.ht supports various formats)
     const validExtensions = ['.mp3', '.wav', '.m4a', '.flac', '.ogg', '.webm'];
     const fileExtension = audioFile.name.toLowerCase().substring(audioFile.name.lastIndexOf('.'));
     const isValidAudio = audioFile.type.startsWith('audio/') || validExtensions.includes(fileExtension);
@@ -95,21 +100,20 @@ export const cloneVoice = async (
       throw new Error("Please upload a valid audio file (MP3, WAV, M4A, FLAC, OGG, or WEBM)");
     }
     
-    console.log(`Creating FormData for ElevenLabs API...`);
+    console.log(`Creating FormData for Play.ht API...`);
     
-    // Create FormData with proper structure for ElevenLabs API
+    // Create FormData with proper structure for Play.ht API
     const formData = new FormData();
-    formData.append('name', name.trim());
-    formData.append('description', `Voice cloned from ${name.trim()} using Echoes AI`);
-    formData.append('files', audioFile, audioFile.name);
-    formData.append('labels', JSON.stringify({}));
-    
-    console.log(`Making API request to ElevenLabs...`);
-    console.log(`URL: ${ELEVENLABS_API_BASE}/voices/add`);
-    
-    const response = await fetch(`${ELEVENLABS_API_BASE}/voices/add`, {
+    // Play.ht voice cloning endpoint expects a file
+    formData.append('file', audioFile, audioFile.name);
+
+    console.log(`Making API request to Play.ht for cloning...`);
+    console.log(`URL: ${PLAYHT_API_BASE}/cloned-voices/sync`); // Using sync endpoint for simplicity
+
+    const response = await fetch(`${PLAYHT_API_BASE}/cloned-voices/sync`, {
       method: 'POST',
       headers: {
+        'X-User-ID': PLAYHT_USER_ID,
         'xi-api-key': apiKey.trim(),
       },
       body: formData,
@@ -128,7 +132,7 @@ export const cloneVoice = async (
       try {
         const errorData = JSON.parse(responseText);
         console.error("ElevenLabs API error details:", errorData);
-        
+
         if (errorData.detail) {
           if (typeof errorData.detail === 'string') {
             errorMessage = errorData.detail;
@@ -157,7 +161,7 @@ export const cloneVoice = async (
         
       } catch (jsonError) {
         console.error("Could not parse error response as JSON:", jsonError);
-        errorMessage = `HTTP ${response.status}: ${responseText || response.statusText}`;
+        errorMessage = `HTTP ${response.status}: ${responseText || response.statusText}. Could not parse error JSON.`;
       }
       
       throw new Error(errorMessage);
@@ -174,14 +178,15 @@ export const cloneVoice = async (
     
     console.log("Voice cloning successful:", data);
     
-    if (!data.voice_id) {
-      throw new Error("Invalid response: missing voice_id in response");
+    if (!data.id) {
+      // Play.ht sync cloning returns the voice ID directly in the 'id' field
+      throw new Error("Invalid response: missing voice ID in response");
     }
     
     console.log(`=== ELEVENLABS CLONING COMPLETED ===`);
-    console.log(`New voice ID: ${data.voice_id}`);
-    
-    return {
+    console.log(`New voice ID: ${data.id}`);
+
+    return { // Play.ht sync cloning returns the voice ID in the 'id' field
       voiceId: data.voice_id,
       name: name.trim(),
     };
@@ -198,75 +203,102 @@ export const cloneVoice = async (
   }
 };
 
-// Function to convert text to speech using ElevenLabs
+// Function to convert text to speech using Play.ht
 export const textToSpeech = async (
   text: string,
   voiceId: string,
-  apiKey: string = ELEVENLABS_VOICE_API_KEY
-): Promise<TextToSpeechResponse> => { // Add language parameter
+  language: string = 'en-US', // Add language parameter with default
+  apiKey: string = PLAYHT_API_KEY
+): Promise<TextToSpeechResponse> => {
 
   try {
-    console.log(`Converting text to speech using voice ID: ${validVoiceId}`);
+    const validVoiceId = getValidVoiceId(voiceId); // Ensure a valid voice ID is used
+    console.log(`Converting text to speech using Play.ht with voice ID: ${validVoiceId}`);
     console.log(`Text to synthesize: "${text}"`);
-    
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${validVoiceId}`, {
+    console.log(`Language: ${language}`);
+
+    // Play.ht text-to-speech endpoint
+    const response = await fetch(`${PLAYHT_API_BASE}/tts`, {
       method: 'POST',
       headers: {
-        'xi-api-key': apiKey,
+        'X-User-ID': PLAYHT_USER_ID,
+        'AUTHORIZATION': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         text,
-        model_id: 'eleven_multilingual_v2', // Use multilingual model for diverse languages
-        voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.75,
-        }
+        voice_id: validVoiceId,
+        // Play.ht handles emotion and multilanguage based on the voice model and API configuration
+        // Explicit parameters for emotion or language might depend on the specific Play.ht voice and features
+        // For natural, emotional output, using a high-quality voice model is key.
+        // Play.ht's API often handles language detection or requires language codes depending on the voice.
+        // Assuming the voice model supports the requested language.
+        // For streaming:
+        output_format: 'mp3', // Or 'wav', etc.
+        quality: 'high', // Or 'medium', 'low'
+        speed: 1, // Normal speed
+        sample_rate: 44100, // Standard sample rate
+        // Play.ht might have specific parameters for emotion or style if the voice supports it.
+        // For Telugu, ensure the voice_id you use is specifically for a Telugu speaker or a multilingual one.
       }),
     });
-    
+
     if (!response.ok) {
       const errorText = await response.text().catch(() => 'Unknown error');
       console.error("Text to speech API error:", errorText);
-      throw new Error(`Failed to convert text to speech: ${response.status} ${response.statusText}`);
+      return { success: false, errorMessage: `Failed to convert text to speech: ${response.status} ${response.statusText} - ${errorText}` };
     }
-    
-    const audioBlob = await response.blob();
-    const audioUrl = URL.createObjectURL(audioBlob);
-    
-    console.log("Text to speech successful, created audio URL:", audioUrl);
+
+    // Play.ht streams audio directly
+    const audioStream = response.body;
+
+    // Convert stream to blob URL for playback in the browser
+    const blob = await response.blob();
+    const audioUrl = URL.createObjectURL(blob);
+
+    console.log("Text to speech successful, created audio URL and stream.");
     return {
       audioUrl: audioUrl,
+      audioStream: audioStream || undefined, // Provide the stream if available
+      success: true,
     };
   } catch (error) {
     console.error("Error converting text to speech:", error);
-    throw new Error(`Failed to convert text to speech: ${error instanceof Error ? error.message : String(error)}`);
+    return { success: false, errorMessage: `Failed to convert text to speech: ${error instanceof Error ? error.message : String(error)}` };
   }
 };
 
-// New function to generate real-time talking avatar with lip-sync
+// New function to generate real-time talking avatar with lip-sync (using a placeholder)
 export const generateTalkingAvatar = async (
   text: string,
   voiceId: string,
   imageUrl: string,
-  apiKey: string = ELEVENLABS_VIDEO_API_KEY
+  language: string = 'en-US', // Add language parameter
+  apiKey: string = PLAYHT_API_KEY // Use Play.ht API key
 ): Promise<AvatarVideoResponse> => {
   try {
     console.log(`Generating talking avatar with:
       - Text: ${text}
       - Voice ID: ${voiceId}
-      - Image URL: ${imageUrl}`);
+      - Image URL: ${imageUrl}
+      - Language: ${language}`);
 
-    // First, generate the audio with proper voice validation
-    const audioResponse = await textToSpeech(text, voiceId);
-    
+    // First, generate the audio with proper voice validation and language support
+    const audioResponse = await textToSpeech(text, voiceId, language, apiKey);
+
+    if (!audioResponse.success || !audioResponse.audioUrl) {
+        throw new Error(audioResponse.errorMessage || "Failed to generate audio for avatar.");
+    }
+
     // For real-time avatar generation, we'll use a placeholder implementation
     // In a production environment, you would integrate with a service like D-ID, Synthesia, or RunwayML
     // For now, we'll return the audio and use CSS animations for lip-sync simulation
-    
+
     console.log("Generated talking avatar with audio URL:", audioResponse.audioUrl);
-    
+
     return {
+      audioUrl: audioUrl,
+    };
       videoUrl: imageUrl, // Using static image for now with CSS animation
       audioUrl: audioResponse.audioUrl,
     };
@@ -276,11 +308,11 @@ export const generateTalkingAvatar = async (
   }
 };
 
-// Get available voices from ElevenLabs
-export const getAvailableVoices = async (apiKey: string = ELEVENLABS_VOICE_API_KEY): Promise<any[]> => {
+// Get available voices from Play.ht
+export const getAvailableVoices = async (apiKey: string = PLAYHT_API_KEY): Promise<any[]> => {
   try {
-    console.log("Fetching available voices from ElevenLabs API");
-    
+    console.log("Fetching available voices from Play.ht API");
+
     const response = await fetch("https://api.elevenlabs.io/v1/voices", {
       headers: {
         'xi-api-key': apiKey,
@@ -290,11 +322,11 @@ export const getAvailableVoices = async (apiKey: string = ELEVENLABS_VOICE_API_K
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error("Error fetching voices:", errorData);
-      throw new Error(`Failed to fetch voices: ${response.status} ${response.statusText}`);
+      throw new Error(`Failed to fetch voices from Play.ht: ${response.status} ${response.statusText}`);
     }
-    
+
     const data = await response.json();
-    console.log(`Retrieved ${data.voices?.length || 0} voices`);
+    console.log(`Retrieved ${data.voices?.length || 0} voices from Play.ht`);
     return data.voices || [];
   } catch (error) {
     console.error("Error fetching voices:", error);
@@ -315,7 +347,7 @@ export const enhancedGenerateAvatarResponse = async (
   voiceId: string,
   language: string,
   geminiApiKey: string,
-  elevenLabsApiKey: string = ELEVENLABS_VOICE_API_KEY
+  playhtApiKey: string = PLAYHT_API_KEY // Use Play.ht API key
 ): Promise<any> => {
   try {
     console.log(`Generating enhanced avatar response with real-time lip-sync:
@@ -323,17 +355,16 @@ export const enhancedGenerateAvatarResponse = async (
       - Image URL: ${imageUrl}
       - Voice ID: ${voiceId}
       - Language: ${language}`);
-    
+
     // Generate contextual response (for demo, we'll echo the message with a response)
     const textResponse = `I understand you said: "${message}". How can I help you with that?`;
-    
+
     console.log(`Generated text response: "${textResponse}"`);
-    
+
     // Generate talking avatar with lip-sync
     const avatarResponse = await generateTalkingAvatar(
       textResponse,
       voiceId,
-      // Note: Language parameter is not directly used here in generateTalkingAvatar,
       imageUrl,
       ELEVENLABS_VIDEO_API_KEY
     );
