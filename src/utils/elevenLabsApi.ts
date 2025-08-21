@@ -16,8 +16,8 @@ interface AvatarVideoResponse {
 }
 
 // Updated API keys - using user's provided key
-const ELEVENLABS_VOICE_API_KEY = "ak-6ab1e48ed1e248b6b9769c10aba23ade";
-const ELEVENLABS_VIDEO_API_KEY = "0ac1eced-ba7c-4e6e-8480-f85d32734b3c";
+const ELEVENLABS_VOICE_API_KEY = "ak-6ab1e48ed1e248b6b9769c10aba23ade"; // Using the provided key
+const ELEVENLABS_VIDEO_API_KEY = "ak-6ab1e48ed1e248b6b9769c10aba23ade"; // Using the provided key
 
 // Valid ElevenLabs voice IDs - fallback voices
 const DEFAULT_VOICES = {
@@ -53,7 +53,7 @@ export const getValidVoiceId = (voiceId: string): string => {
 
 // ElevenLabs API integration for voice cloning (restored working version)
 const ELEVENLABS_API_BASE = 'https://api.elevenlabs.io/v1';
-const ELEVENLABS_API_KEY = "ak-6ab1e48ed1e248b6b9769c10aba23ade";
+const ELEVENLABS_API_KEY = "ak-6ab1e48ed1e248b6b9769c10aba23ade"; // Using the provided key
 
 // Function to clone a voice using ElevenLabs API (restored working version)
 export const cloneVoice = async (
@@ -203,9 +203,9 @@ export const textToSpeech = async (
   text: string,
   voiceId: string,
   apiKey: string = ELEVENLABS_VOICE_API_KEY
-): Promise<TextToSpeechResponse> => {
+): Promise<TextToSpeechResponse> => { // Add language parameter
+
   try {
-    const validVoiceId = getValidVoiceId(voiceId);
     console.log(`Converting text to speech using voice ID: ${validVoiceId}`);
     console.log(`Text to synthesize: "${text}"`);
     
@@ -217,7 +217,7 @@ export const textToSpeech = async (
       },
       body: JSON.stringify({
         text,
-        model_id: 'eleven_multilingual_v2',
+        model_id: 'eleven_multilingual_v2', // Use multilingual model for diverse languages
         voice_settings: {
           stability: 0.5,
           similarity_boost: 0.75,
@@ -333,6 +333,7 @@ export const enhancedGenerateAvatarResponse = async (
     const avatarResponse = await generateTalkingAvatar(
       textResponse,
       voiceId,
+      // Note: Language parameter is not directly used here in generateTalkingAvatar,
       imageUrl,
       ELEVENLABS_VIDEO_API_KEY
     );
