@@ -19,16 +19,10 @@ interface AvatarVideoResponse {
 
 // API keys
 const ELEVENLABS_API_KEY = "sk_8de5385f684d217caa84f070d064822919f99064c1af5c0c"; // Your ElevenLabs API Key
+const ELEVENLABS_API_BASE = "https://api.elevenlabs.io/v1";
 
-// Default voices
-const DEFAULT_VOICES = {
-  sarah: "s3://voice-cloning-uploads/b29c6429-0c51-4173-8ff5-2d64b5a22877/charlotte/manifest.json",
-  roger: "s3://voice-cloning-uploads/e229b6d2-1e4f-4791-99c5-04a767a168e8/julie/manifest.json",
-  charlie: "IKne3meq5aSn9XLyUdCD",
-  george: "JBFqnCBsd6RMkjVDRZzb",
-  aria: "9BWtsMINqrJLrRacOk9x",
-  laura: "FGY2WhTYpPnrIDTdsKH5",
-};
+// A default ElevenLabs voice ID (you can change this to a preferred default)
+const DEFAULT_ELEVENLABS_VOICE_ID = "21m00TedyVKMhqcXzPbh"; // Rachel - a standard voice
 
 // Validate and get proper voice ID
 export const getValidVoiceId = (voiceId: string): string => {
@@ -36,13 +30,13 @@ export const getValidVoiceId = (voiceId: string): string => {
 
   const lowerVoiceId = voiceId?.toLowerCase();
   if (lowerVoiceId && DEFAULT_VOICES[lowerVoiceId as keyof typeof DEFAULT_VOICES]) {
-    console.log(
-      `Using mapped ElevenLabs voice: ${lowerVoiceId} -> ${DEFAULT_VOICES[lowerVoiceId as keyof typeof DEFAULT_VOICES]}`
-    );
-    return DEFAULT_VOICES[lowerVoiceId as keyof typeof DEFAULT_VOICES];
+    // If the provided voiceId is one of the old mapped voices, use a default ElevenLabs voice
+    console.warn(`Mapping old voice ID "${voiceId}" to default ElevenLabs voice "${DEFAULT_ELEVENLABS_VOICE_ID}"`);
+ return DEFAULT_ELEVENLABS_VOICE_ID;
   }
 
-  return voiceId || "21m00TedyVKMhqcXzPbh"; // Default ElevenLabs voice if none provided or invalid mapped voice
+  // Use the provided voiceId if it's not an old mapped voice, otherwise use the default
+  return voiceId || DEFAULT_ELEVENLABS_VOICE_ID;
 };
 
 // Voice cloning
@@ -230,7 +224,7 @@ export const enhancedGenerateAvatarResponse = async (
       textResponse,
       voiceId,
       imageUrl,
-      ELEVENLABS_VIDEO_API_KEY
+      ELEVENLAB_VIDEO_API_KEY
     );
 
     return {
