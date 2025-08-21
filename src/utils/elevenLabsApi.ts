@@ -1,4 +1,4 @@
-// Play.ht API integration for voice cloning and synthesis with real-time avatars
+// Play.ht API integration for voice cloning, text-to-speech, and avatar generation
 
 interface VoiceCloneResponse {
   voiceId: string;
@@ -51,15 +51,25 @@ const PLAYHT_API_BASE = "https://api.play.ht/api/v2";
 // -------- Voice Cloning --------
 export const cloneVoice = async (
   audioFile: File,
-  name: string
+  name?: string // optional
 ): Promise<VoiceCloneResponse> => {
   try {
     if (!audioFile) throw new Error("Audio file is required");
-    if (!name || !name.trim()) throw new Error("Voice name is required");
+
+    // Generate safe name if missing
+    let voiceName = "";
+    if (typeof name === "string" && name.trim()) {
+      voiceName = name.trim();
+    } else if (audioFile.name) {
+      // Use filename without extension
+      voiceName = audioFile.name.replace(/\.[^/.]+$/, "");
+    } else {
+      voiceName = "custom-voice";
+    }
 
     const formData = new FormData();
     formData.append("file", audioFile, audioFile.name);
-    formData.append("voice", name); // voice name required by Play.ht
+    formData.append("voice", voiceName);
 
     const response = await fetch(`${PLAYHT_API_BASE}/cloned-voices`, {
       method: "POST",
@@ -78,7 +88,7 @@ export const cloneVoice = async (
 
     return {
       voiceId: data.id,
-      name: data.name || name,
+      name: data.name || voiceName,
       status: data.status || "success",
     };
   } catch (err) {
@@ -108,7 +118,7 @@ export const textToSpeech = async (
         quality: "high",
         output_format: "mp3",
         sample_rate: 44100,
-        voice_engine: "PlayHT2.0-turbo", // recommended latest
+        voice_engine: "PlayHT2.0-turbo", // recommended
       }),
     });
 
@@ -126,7 +136,7 @@ export const textToSpeech = async (
   }
 };
 
-// -------- Talking Avatar (Placeholder) --------
+// -------- Talking Avatar (Stub) --------
 export const generateTalkingAvatar = async (
   text: string,
   voiceId: string,
@@ -139,7 +149,7 @@ export const generateTalkingAvatar = async (
     throw new Error(audioResponse.errorMessage || "Failed to generate audio");
   }
 
-  // Stubbed video response (replace with D-ID, Synthesia, etc. in real apps)
+  // Stubbed video response — replace with D-ID/Synthesia/RunwayML later
   return {
     videoUrl: imageUrl,
     audioUrl: audioResponse.audioUrl,
