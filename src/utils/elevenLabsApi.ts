@@ -1,74 +1,53 @@
-// Play.ht API integration for voice cloning, text-to-speech, and avatar generation
+import fs from "fs";
 
-interface VoiceCloneResponse {
+// -------- Types --------
+export interface VoiceCloneResponse {
   voiceId: string;
   name: string;
   status: string;
-  message?: string;
 }
 
-interface TextToSpeechResponse {
-  audioUrl?: string;
-  errorMessage?: string;
-  success: boolean;
-  audioStream?: ReadableStream<Uint8Array>;
-}
-
-interface AvatarVideoResponse {
-  videoUrl: string;
-  audioUrl: string;
-}
-
-// Play.ht credentials
-const PLAYHT_API_KEY = "ak-6ab1e48ed1e248b6b9769c10aba23ade";
-const PLAYHT_USER_ID = "x9zwH7tV4ac6QajGjHG0TLjS2ao2";
-
-// Default voices for fallback
-const DEFAULT_VOICES = {
-  sarah: "s3://voice-cloning-uploads/b29c6429-0c51-4173-8ff5-2d64b5a22877/charlotte/manifest.json",
-  roger: "s3://voice-cloning-uploads/e229b6d2-1e4f-4791-99c5-04a767a168e8/julie/manifest.json",
-  charlie: "IKne3meq5aSn9XLyUdCD",
-  george: "JBFqnCBsd6RMkjVDRZzb",
-  aria: "9BWtsMINqrJLrRacOk9x",
-  laura: "FGY2WhTYpPnrIDTdsKH5",
-};
-
-// Helper: Validate and map voice IDs
-export const getValidVoiceId = (voiceId: string): string => {
-  if (voiceId?.startsWith("s3://")) return voiceId;
-
-  const lower = voiceId?.toLowerCase();
-  if (lower && DEFAULT_VOICES[lower as keyof typeof DEFAULT_VOICES]) {
-    return DEFAULT_VOICES[lower as keyof typeof DEFAULT_VOICES];
-  }
-
-  return DEFAULT_VOICES.sarah;
-};
-
-// Play.ht API base
+// -------- Config --------
 const PLAYHT_API_BASE = "https://api.play.ht/api/v2";
+const PLAYHT_API_KEY = process.env.PLAYHT_API_KEY || "";
+const PLAYHT_USER_ID = process.env.PLAYHT_USER_ID || "";
 
-// -------- Voice Cloning --------
+// -------- Voice Cloning (MP3 Input) --------
 export const cloneVoice = async (
-  audioFile: File,
-  name?: string // optional
+  audioFile: File | Blob | Buffer | string,
+  name?: string
 ): Promise<VoiceCloneResponse> => {
   try {
     if (!audioFile) throw new Error("Audio file is required");
 
-    // Generate safe name if missing
-    let voiceName = "";
+    let fileBlob: Blob;
+    let fileName: string = "sample.mp3";
+
+    if (typeof audioFile === "string") {
+      // File path case (Node.js)
+      const buffer = fs.readFileSync(audioFile);
+      fileBlob = new Blob([buffer], { type: "audio/mpeg" });
+      fileName = audioFile.split("/").pop() || "sample.mp3";
+    } else if (audioFile instanceof Buffer) {
+      fileBlob = new Blob([audioFile], { type: "audio/mpeg" });
+    } else if (audioFile instanceof Blob) {
+      fileBlob = audioFile;
+    } else {
+      // Browser File case
+      fileBlob = audioFile as File;
+      fileName = (audioFile as File).name || "sample.mp3";
+    }
+
+    // Generate safe name if not provided
+    let voiceName: string;
     if (typeof name === "string" && name.trim()) {
       voiceName = name.trim();
-    } else if (audioFile.name) {
-      // Use filename without extension
-      voiceName = audioFile.name.replace(/\.[^/.]+$/, "");
     } else {
-      voiceName = "custom-voice";
+      voiceName = fileName.replace(/\.[^/.]+$/, "") || "custom-voice";
     }
 
     const formData = new FormData();
-    formData.append("file", audioFile, audioFile.name);
+    formData.append("file", fileBlob, fileName);
     formData.append("voice", voiceName);
 
     const response = await fetch(`${PLAYHT_API_BASE}/cloned-voices`, {
@@ -94,64 +73,4 @@ export const cloneVoice = async (
   } catch (err) {
     throw new Error(`Voice cloning failed: ${(err as Error).message}`);
   }
-};
-
-// -------- Text-to-Speech --------
-export const textToSpeech = async (
-  text: string,
-  voiceId: string,
-  language: string = "en-US"
-): Promise<TextToSpeechResponse> => {
-  try {
-    const validVoiceId = getValidVoiceId(voiceId);
-
-    const response = await fetch(`${PLAYHT_API_BASE}/tts`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${PLAYHT_API_KEY}`,
-        "X-User-ID": PLAYHT_USER_ID,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        text,
-        voice: validVoiceId,
-        quality: "high",
-        output_format: "mp3",
-        sample_rate: 44100,
-        voice_engine: "PlayHT2.0-turbo", // recommended
-      }),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      return { success: false, errorMessage: errText };
-    }
-
-    const blob = await response.blob();
-    const audioUrl = URL.createObjectURL(blob);
-
-    return { success: true, audioUrl };
-  } catch (err) {
-    return { success: false, errorMessage: (err as Error).message };
-  }
-};
-
-// -------- Talking Avatar (Stub) --------
-export const generateTalkingAvatar = async (
-  text: string,
-  voiceId: string,
-  imageUrl: string,
-  language: string = "en-US"
-): Promise<AvatarVideoResponse> => {
-  const audioResponse = await textToSpeech(text, voiceId, language);
-
-  if (!audioResponse.success || !audioResponse.audioUrl) {
-    throw new Error(audioResponse.errorMessage || "Failed to generate audio");
-  }
-
-  // Stubbed video response — replace with D-ID/Synthesia/RunwayML later
-  return {
-    videoUrl: imageUrl,
-    audioUrl: audioResponse.audioUrl,
-  };
 };
