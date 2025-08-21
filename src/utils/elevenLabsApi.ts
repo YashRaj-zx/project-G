@@ -1,5 +1,3 @@
-import fs from "fs";
-
 // -------- Types --------
 export interface VoiceCloneResponse {
   voiceId: string;
@@ -23,17 +21,7 @@ export const cloneVoice = async (
     let fileBlob: Blob;
     let fileName: string = "sample.mp3";
 
-    if (typeof audioFile === "string") {
-      // File path case (Node.js)
-      const buffer = fs.readFileSync(audioFile);
-      fileBlob = new Blob([buffer], { type: "audio/mpeg" });
-      fileName = audioFile.split("/").pop() || "sample.mp3";
-    } else if (audioFile instanceof Buffer) {
-      fileBlob = new Blob([audioFile], { type: "audio/mpeg" });
-    } else if (audioFile instanceof Blob) {
-      fileBlob = audioFile;
-    } else {
-      // Browser File case
+    if (audioFile instanceof File || audioFile instanceof Blob) {
       fileBlob = audioFile as File;
       fileName = (audioFile as File).name || "sample.mp3";
     }
@@ -43,7 +31,7 @@ export const cloneVoice = async (
     if (typeof name === "string" && name.trim()) {
       voiceName = name.trim();
     } else {
-      voiceName = fileName.replace(/\.[^/.]+$/, "") || "custom-voice";
+      voiceName = fileName.replace(/\.[^/.]+$/, "") || "custom-voice"; // Basic sanitization
     }
 
     const formData = new FormData();
