@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import NavBar from "@/components/layout/NavBar";
+import MobileVoiceCall from "@/components/MobileVoiceCall";
 
 const VideoCall = () => {
   const [searchParams] = useSearchParams();
