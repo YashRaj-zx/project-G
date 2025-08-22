@@ -1,24 +1,38 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import Image from "/Gloomie.png";
+
+type Message = {
+  sender: "user";
+  text: string;
+};
 
 export default function Gloomie() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<{ sender: "user" | "bot"; text: string }[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
 
-  const handleSend = async () => {
+  // 👇 Replace with your Gemini API Key
+  const GEMINI_API_KEY = <div className="env">NEXT_PUBLIC_GEMINI_API_KEY</div>;
+
+  const WEBSITE_CONTEXT = `
+  You are Gloomie, the friendly assistant for our website.
+  Your job is to answer ONLY about this website, its features, services,
+  and how users can interact with it. 
+  If asked unrelated questions, politely say you only provide help about this website.
+  `;
+
+  const sendMessage = async () => {
     if (!input.trim()) return;
 
-    setMessages((prev) => [...prev, { sender: "user", text: input }]);
-    const userMessage = input;
+    const userMessage: Message = { sender: "user", text: input };
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
 
     try {
-      const response = await fetch(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" +
-          process.env.NEXT_PUBLIC_GEMINI_API_KEY,
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -26,12 +40,8 @@ export default function Gloomie() {
             contents: [
               {
                 parts: [
-                  {
-                    text: `You are Gloomie, the Project G assistant. Only answer questions related to Project G website. 
-                    If the question is not related, reply: "I can only answer questions about Project G." 
-
-                    User: ${userMessage}`,
-                  },
+                  { text: WEBSITE_CONTEXT },
+                  { text: `User asked: ${input}` },
                 ],
               },
             ],
@@ -39,56 +49,57 @@ export default function Gloomie() {
         }
       );
 
-      const data = await response.json();
-      console.log("Gemini response:", data);
-
-      if (data.error) {
-        setMessages((prev) => [
-          ...prev,
-          { sender: "bot", text: "⚠️ Gemini API Error: " + data.error.message },
-        ]);
-        return;
-      }
-
-      const aiText =
-        data?.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ No response from AI.";
-
-      setMessages((prev) => [...prev, { sender: "bot", text: aiText }]);
-    } catch (error) {
+      const data = await res.json();
+      const botMessage: Message = {
+        sender: "bot",
+        text:
+          data.candidates?.[0]?.content?.parts?.[0]?.text ||
+          "Sorry, I can only help with our website.",
+      };
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (err) {
       setMessages((prev) => [
         ...prev,
-        { sender: "bot", text: "⚠️ Error: " + (error instanceof Error ? error.message : "Unknown error") },
+        { sender: "bot", text: "⚠️ Error: Could not respond." },
       ]);
     }
   };
 
   return (
-    <>
-      {/* Floating Gloomie Logo Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-4 right-4 w-14 h-14 rounded-full shadow-lg bg-white flex items-center justify-center border border-gray-200 hover:scale-105 transition"
-      >
-        <Image src="/gloomie.png" alt="Gloomie" width={40} height={40} />
-      </button>
+    <div className="fixed bottom-4 right-4">
+      {/* Gloomie Logo */}
+      {!isOpen && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="p-2 rounded-full shadow-lg bg-white hover:scale-105 transition"
+        >
+          <Image src="/Gloomie.png" alt="Gloomie" width={60} height={60} />
+        </button>
+      )}
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-20 right-4 w-80 bg-white shadow-xl rounded-lg border border-gray-200 flex flex-col">
-          <div className="p-3 bg-indigo-600 text-white font-semibold rounded-t-lg flex justify-between">
-            <span>Gloomie</span>
-            <button onClick={() => setIsOpen(false)} className="text-sm">✖</button>
+        <div className="w-80 h-96 bg-white shadow-xl rounded-xl flex flex-col p-2">
+          {/* Header */}
+          <div className="flex justify-between items-center border-b pb-1 mb-2">
+            <h2 className="font-bold text-blue-600">Gloomie Assistant</h2>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="text-red-500 font-bold"
+            >
+              ✕
+            </button>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 p-3 overflow-y-auto max-h-96 space-y-2">
-            {messages.map((msg, idx) => (
+          <div className="flex-1 overflow-y-auto p-2 space-y-2">
+            {messages.map((msg, i) => (
               <div
-                key={idx}
-                className={`p-2 rounded-lg text-sm ${
+                key={i}
+                className={`p-2 rounded-lg max-w-[70%] ${
                   msg.sender === "user"
-                    ? "bg-indigo-500 text-white self-end text-right"
-                    : "bg-gray-100 text-gray-900 self-start text-left"
+                    ? "bg-blue-500 text-white ml-auto"
+                    : "bg-gray-200 text-black mr-auto"
                 }`}
               >
                 {msg.text}
@@ -97,23 +108,23 @@ export default function Gloomie() {
           </div>
 
           {/* Input */}
-          <div className="p-2 border-t flex">
+          <div className="flex items-center gap-2 mt-2">
             <input
-              className="flex-1 border rounded-l px-2 text-sm"
+              className="flex-1 border rounded-lg px-2 py-1 text-sm"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask me about Project G..."
-              onKeyDown={(e) => e.key === "Enter" && handleSend()}
+              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+              placeholder="Ask me about our site..."
             />
             <button
-              onClick={handleSend}
-              className="bg-indigo-600 text-white px-3 rounded-r hover:bg-indigo-700 text-sm"
+              onClick={sendMessage}
+              className="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm"
             >
               Send
             </button>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
