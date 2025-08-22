@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { sendChatMessage } from '../utils/geminiApi'; // Assuming sendChatMessage is in this path
-import '../styles/spooky-animation.css'; // Import the CSS file
-import { useAuth } from '../contexts/AuthContext'; // Assuming AuthContext is in this path
+import { sendChatMessage } from '../utils/geminiApi'; // ✅ using env-safe API call
+import '../styles/spooky-animation.css';
+import { useAuth } from '../contexts/AuthContext';
 
 type AnimationState = 'visible' | 'fading-out' | 'fading-in';
 
@@ -20,25 +20,23 @@ interface ChatInterfaceProps {
 }
 
 const Gloomie: React.FC<GloomieProps> = ({ onClick }) => {
-  const { user } = useAuth(); // Access user from AuthContext
+  const { user } = useAuth();
   const [isChatVisible, setIsChatVisible] = useState(false);
   const [animationState, setAnimationState] = useState<AnimationState>('visible');
 
   const handleClick = () => {
-    setAnimationState('visible'); // Reset animation state when clicked
+    setAnimationState('visible');
     if (isChatVisible) {
       setIsChatVisible(false);
-      setAnimationState('fading-in'); // Start fade-in animation when closing
+      setAnimationState('fading-in');
     } else {
       setIsChatVisible(true);
     }
   };
 
-  // Show welcome message on first login
+  // Show welcome message only once per user
   useEffect(() => {
     const userId = user?.id;
-    let timer: ReturnType<typeof setTimeout>;
-
     const hasShownWelcome = userId
       ? localStorage.getItem(`gloomieWelcome_${userId}`)
       : null;
@@ -50,12 +48,7 @@ const Gloomie: React.FC<GloomieProps> = ({ onClick }) => {
       if (userId) {
         localStorage.setItem(`gloomieWelcome_${userId}`, 'true');
       }
-
     }
-
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
   }, [user]);
 
   return (
@@ -98,8 +91,8 @@ const Gloomie: React.FC<GloomieProps> = ({ onClick }) => {
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, userName }) => {
   const initialMessage = userName
-    ? `Hello ${userName}! I am Gloomie. What can I help you with?`
-    : 'Hello! I am Gloomie. What can I help you with?';
+    ? `Hello ${userName}! I am Gloomie 👻. What can I help you with?`
+    : 'Hello! I am Gloomie 👻. What can I help you with?';
 
   const [messages, setMessages] = useState<Message[]>([
     { text: initialMessage, sender: 'gloomie' },
@@ -122,7 +115,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, userName }) => {
       const aiMessage: Message = { text: gloomieResponse, sender: 'gloomie' };
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
-      console.error('Error sending message to language model:', error);
+      console.error('Error sending message:', error);
       const errorMessage: Message = {
         text: 'Oops! Something went wrong.',
         sender: 'gloomie',
@@ -133,7 +126,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, userName }) => {
 
   return (
     <>
-      {/* Chat Header */}
+      {/* Header */}
       <div className="flex justify-between items-center p-4 bg-purple-500 text-white rounded-t-lg">
         <h3 className="text-lg font-semibold">Gloomie Chat</h3>
         <button className="text-white hover:text-gray-200" onClick={onClose}>
@@ -141,7 +134,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, userName }) => {
         </button>
       </div>
 
-      {/* Chat Body */}
+      {/* Messages */}
       <div className="flex-1 p-4 overflow-y-auto max-h-60">
         {messages.map((message, index) => (
           <div
@@ -163,7 +156,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, userName }) => {
         ))}
       </div>
 
-      {/* Chat Input */}
+      {/* Input */}
       <div className="p-4 border-t flex">
         <input
           type="text"
@@ -187,3 +180,4 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onClose, userName }) => {
 };
 
 export default Gloomie;
+
