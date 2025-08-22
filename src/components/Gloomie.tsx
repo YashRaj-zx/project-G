@@ -2,10 +2,9 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Load API key from .env
 const genAI = new GoogleGenerativeAI(
   process.env.NEXT_PUBLIC_GEMINI_API_KEY as string
 );
@@ -18,9 +17,28 @@ const Gloomie: React.FC = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [chat, setChat] = useState<any>(null);
+
+  // Create chat session once
+  useEffect(() => {
+    const newChat = model.startChat({
+      history: [
+        {
+          role: "user",
+          parts: [{ text: "You are Gloomie, assistant for Project G website." }],
+        },
+        {
+          role: "model",
+          parts: [{ text: "Hi! I can answer only questions about Project G." }],
+        },
+      ],
+      generationConfig: { maxOutputTokens: 200 },
+    });
+    setChat(newChat);
+  }, []);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || !chat) return;
 
     setMessages((prev) => [...prev, { sender: "user", text: input }]);
     const userMessage = input;
@@ -28,27 +46,21 @@ const Gloomie: React.FC = () => {
     setLoading(true);
 
     try {
-      // Gemini expects a plain string prompt, not role/parts
-      const result = await model.generateContent(`
-        You are Gloomie, the official assistant for the website "Project G".
-        Only answer questions related to this website (its purpose, features, usage, etc).
-        If a question is unrelated, reply with:
+      const result = await chat.sendMessage(
+        `Only answer if it's about Project G. If unrelated, reply:
         "⚠️ I can only answer questions about this website."
 
-        User: ${userMessage}
-      `);
+        User: ${userMessage}`
+      );
 
       const response = result.response.text();
       setMessages((prev) => [...prev, { sender: "gloomie", text: response }]);
     } catch (error) {
+      console.error("Gemini Error:", error);
       setMessages((prev) => [
         ...prev,
-        {
-          sender: "gloomie",
-          text: "⚠️ Error: Could not get a response from the AI.",
-        },
+        { sender: "gloomie", text: "⚠️ Error: Could not get a response." },
       ]);
-      console.error("Gemini Error:", error);
     } finally {
       setLoading(false);
     }
@@ -56,7 +68,7 @@ const Gloomie: React.FC = () => {
 
   return (
     <div className="fixed bottom-6 right-6 flex flex-col items-end">
-      {/* Gloomie image button (before opening chat) */}
+      {/* Gloomie button */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
@@ -125,4 +137,4 @@ const Gloomie: React.FC = () => {
 };
 
 export default Gloomie;
-                
+                                        
