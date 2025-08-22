@@ -1,19 +1,23 @@
 "use client";
-import React, { useState } from "react";
 
-const Gloomie = () => {
-  const [messages, setMessages] = useState([{ sender: "bot", text: "Hello 👋 Ask me anything about Project G!" }]);
+import { useState } from "react";
+
+export default function Gloomie() {
+  const [messages, setMessages] = useState<{ sender: "user" | "bot"; text: string }[]>([]);
   const [input, setInput] = useState("");
 
   const handleSend = async () => {
     if (!input.trim()) return;
 
-    const userMessage = { sender: "user", text: input };
-    setMessages([...messages, userMessage]);
+    // Add user message
+    setMessages((prev) => [...prev, { sender: "user", text: input }]);
+    const userMessage = input;
+    setInput("");
 
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.NEXT_PUBLIC_GEMINI_API_KEY}`,
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" +
+          process.env.NEXT_PUBLIC_GEMINI_API_KEY,
         {
           method: "POST",
           headers: {
@@ -26,73 +30,82 @@ const Gloomie = () => {
                   {
                     text: `You are Gloomie, the Project G assistant. Only answer questions related to Project G website. 
                     If the question is not related, reply: "I can only answer questions about Project G." 
-                    
-                    User: ${input}`
-                  }
-                ]
-              }
-            ]
+
+                    User: ${userMessage}`,
+                  },
+                ],
+              },
+            ],
           }),
         }
       );
 
       const data = await response.json();
-      console.log("Gemini raw response:", data);
+      console.log("Gemini full response:", data); // 🔍 Debugging
 
-      if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
-        const botMessage = {
-          sender: "bot",
-          text: data.candidates[0].content.parts[0].text,
-        };
-        setMessages((prev) => [...prev, botMessage]);
-      } else {
-        throw new Error("Invalid response structure");
+      // Check API error
+      if (data.error) {
+        console.error("Gemini API Error:", data.error);
+        setMessages((prev) => [
+          ...prev,
+          { sender: "bot", text: "⚠️ Gemini API Error: " + data.error.message },
+        ]);
+        return;
       }
+
+      // Extract AI text
+      const aiText =
+        data?.candidates?.[0]?.content?.parts?.[0]?.text || "⚠️ No response from AI.";
+
+      setMessages((prev) => [...prev, { sender: "bot", text: aiText }]);
     } catch (error) {
       console.error("Gemini Error:", error);
-      setMessages((prev) => [...prev, { sender: "bot", text: "⚠️ Error: Could not get a response." }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "bot",
+          text: "⚠️ Error: " + (error instanceof Error ? error.message : "Unknown error"),
+        },
+      ]);
     }
-
-    setInput("");
   };
 
   return (
-    <div className="fixed bottom-5 right-5 w-80 bg-white border border-gray-300 rounded-lg shadow-lg">
-      <div className="flex items-center bg-gray-900 text-white px-3 py-2 rounded-t-lg">
-        <img src="/gloomie.png" alt="Gloomie" className="w-6 h-6 mr-2" />
-        <h2 className="text-lg font-bold">Gloomie</h2>
-      </div>
-      <div className="h-64 overflow-y-auto p-3 space-y-2">
-        {messages.map((msg, index) => (
+    <div className="fixed bottom-4 right-4 w-80 bg-white shadow-xl rounded-lg border border-gray-300 flex flex-col">
+      {/* Header */}
+      <div className="bg-gray-900 text-white p-3 rounded-t-lg font-bold">👻 Gloomie</div>
+
+      {/* Messages */}
+      <div className="flex-1 p-3 overflow-y-auto space-y-2 max-h-80">
+        {messages.map((msg, i) => (
           <div
-            key={index}
-            className={`p-2 rounded-lg text-sm max-w-[80%] ${
+            key={i}
+            className={`p-2 rounded-lg ${
               msg.sender === "user"
-                ? "bg-blue-500 text-white ml-auto"
-                : "bg-gray-200 text-gray-900"
+                ? "bg-blue-500 text-white self-end"
+                : "bg-gray-200 text-black self-start"
             }`}
           >
             {msg.text}
           </div>
         ))}
       </div>
-      <div className="flex border-t">
+
+      {/* Input */}
+      <div className="flex border-t p-2">
         <input
-          type="text"
+          className="flex-1 border rounded px-2"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask me about Project G..."
-          className="flex-grow px-2 py-2 text-sm outline-none"
         />
         <button
           onClick={handleSend}
-          className="bg-blue-500 text-white px-3 rounded-r-lg hover:bg-blue-600"
+          className="ml-2 bg-blue-500 text-white px-3 py-1 rounded"
         >
           Send
         </button>
       </div>
     </div>
   );
-};
-
-export default Gloomie;
+}
